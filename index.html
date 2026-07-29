@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gujarat Darshan 2026 — Premium Trip Planner</title>
+  <meta name="description" content="Premium interactive itinerary map for Gujarat Darshan group trip, August 22–28, 2026. Sardar Sarovar, Statue of Unity, Dwarka, Somnath and more." />
+
+  <!-- Tailwind CSS CDN v3 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwindcss.config = {
+      theme: { extend: { fontFamily: { sans: ['Inter','system-ui','sans-serif'], display: ['Outfit','system-ui','sans-serif'] } } }
+    }
+  </script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    /* ── Base ─────────────────────────────────────── */
+    :root {
+      --kesari: #FF9933;
+      --kesari-deep: #e8821a;
+      --green: #138808;
+      --ocean: #0EA5E9;
+      --bg: #F8FAFC;
+      --glass: rgba(255,255,255,0.72);
+      --glass-border: rgba(255,153,51,0.15);
+      --shadow-warm: 0 8px 32px rgba(255,153,51,0.12);
+    }
+    *{box-sizing:border-box}
+    ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,153,51,0.35);border-radius:999px}::-webkit-scrollbar-thumb:hover{background:rgba(255,153,51,0.6)}
+
+    /* ── Gradient texts ───────────────────────────── */
+    .gradient-text{background:linear-gradient(135deg,#FF9933,#ec4899,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .gradient-text-warm{background:linear-gradient(135deg,#FF9933,#ef4444,#eab308);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .gradient-text-cool{background:linear-gradient(135deg,#0EA5E9,#8b5cf6,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .gradient-text-gujarat{background:linear-gradient(135deg,#FF9933 0%,#ffffff 50%,#138808 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+    /* ── Header ───────────────────────────────────── */
+    #app-header {
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,153,51,0.18);
+      box-shadow: 0 2px 24px rgba(255,153,51,0.07);
+    }
+    .header-logo-ring {
+      background: linear-gradient(135deg, #FF9933, #e8821a, #138808);
+      box-shadow: 0 4px 16px rgba(255,153,51,0.4);
+    }
+    .header-flag-stripe {
+      height: 3px;
+      background: linear-gradient(90deg, #FF9933 33%, #ffffff 33%, #ffffff 66%, #138808 66%);
+    }
+
+    /* ── Sidebar ──────────────────────────────────── */
+    #sidebar {
+      background: linear-gradient(180deg, #FFFDF8 0%, #FFF8EE 40%, #F8F4EF 100%);
+      border-right: 1px solid rgba(255,153,51,0.12);
+    }
+
+    /* ── Hero overview card ───────────────────────── */
+    .hero-card {
+      background: linear-gradient(135deg, #fff 0%, #FFF9F0 60%, #FFF3E0 100%);
+      border: 1px solid rgba(255,153,51,0.2);
+      box-shadow: 0 4px 24px rgba(255,153,51,0.1), 0 1px 0 rgba(255,255,255,0.8) inset;
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-card::before {
+      content: '';
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 140px; height: 140px;
+      background: radial-gradient(circle, rgba(255,153,51,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .gujarat-icon-strip {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 8px 0 4px;
+      opacity: 0.55;
+      font-size: 18px;
+    }
+
+    /* ── Stat mini cards ──────────────────────────── */
+    .stat-mini {
+      background: rgba(255,255,255,0.9);
+      border: 1px solid rgba(255,153,51,0.14);
+      border-radius: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+      transition: all 0.2s ease;
+    }
+    .stat-mini:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,153,51,0.14); }
+
+    /* ── Countdown ────────────────────────────────── */
+    #countdown-box {
+      background: linear-gradient(135deg, rgba(255,153,51,0.08), rgba(19,136,8,0.06));
+      border: 1px solid rgba(255,153,51,0.2);
+      border-radius: 16px;
+    }
+    .countdown-chip {
+      background: rgba(255,255,255,0.85);
+      border: 1px solid rgba(255,153,51,0.2);
+      border-radius: 12px;
+      padding: 8px 12px;
+      text-align: center;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    @keyframes countdown-pulse{0%,100%{opacity:1}50%{opacity:.6}}
+    .countdown-pulse{animation:countdown-pulse 1s ease-in-out infinite}
+
+    /* ── Timeline ─────────────────────────────────── */
+    .timeline-line{position:absolute;left:19px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,#FF9933,#ec4899,#8b5cf6,#0EA5E9,#138808);opacity:.2}
+
+    /* ── Day cards ────────────────────────────────── */
+    .day-card {
+      transition: all .3s cubic-bezier(.4,0,.2,1);
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      border-radius: 16px;
+      background: transparent;
+    }
+    .day-card:hover {
+      background: linear-gradient(90deg, rgba(255,153,51,0.07), transparent);
+      border-left-color: var(--kesari);
+      transform: translateX(3px);
+      box-shadow: 0 4px 16px rgba(255,153,51,0.08);
+    }
+    .day-card.active {
+      background: linear-gradient(90deg, rgba(255,153,51,0.1), rgba(255,153,51,0.03));
+      border-left-color: var(--kesari);
+      box-shadow: 0 4px 20px rgba(255,153,51,0.12);
+    }
+
+    /* ── Activity items ───────────────────────────── */
+    .activity-item{transition:all .2s ease;cursor:pointer;border-radius:12px;padding:8px 10px}
+    .activity-item:hover{background:rgba(255,153,51,0.08);transform:translateX(2px)}
+    .activity-item.active-activity{background:rgba(255,153,51,0.12);box-shadow:inset 0 0 0 1px rgba(255,153,51,0.22)}
+
+    /* ── Drive pill ───────────────────────────────── */
+    .drive-pill{
+      display:inline-flex;align-items:center;gap:4px;
+      padding:3px 10px;border-radius:99px;
+      font-size:11px;font-weight:600;
+      background:linear-gradient(135deg,#FFF3E0,#FFE0B2);
+      color:#B45309;
+      border:1px solid rgba(255,153,51,0.3);
+      box-shadow: 0 1px 4px rgba(255,153,51,0.15);
+    }
+
+    /* ── Traffic badges ───────────────────────────── */
+    .traffic-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;letter-spacing:.03em}
+    .traffic-light{background:#dcfce7;color:#166534}
+    .traffic-moderate{background:#fef9c3;color:#854d0e}
+    .traffic-heavy{background:#fee2e2;color:#991b1b}
+
+    /* ── RT card ──────────────────────────────────── */
+    #rt-card {
+      background: linear-gradient(135deg, rgba(19,136,8,0.08), rgba(14,165,233,0.06));
+      border: 1px solid rgba(19,136,8,0.2);
+      border-radius: 14px;
+    }
+
+    /* ── Map container ────────────────────────────── */
+    #map-wrapper {
+      position: absolute;
+      inset: 12px;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,153,51,0.1);
+    }
+    #map { width: 100%; height: 100%; }
+
+    /* ── Map legend ───────────────────────────────── */
+    .map-legend {
+      position: absolute;
+      bottom: 28px; left: 28px;
+      z-index: 500;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,153,51,0.18);
+      border-radius: 16px;
+      padding: 12px 14px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+      font-size: 11px;
+    }
+
+    /* ── Popup buttons ────────────────────────────── */
+    .popup-link-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px; border-radius: 8px;
+      font-size: 10px; font-weight: 600;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+    .popup-link-btn:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.12); }
+
+    /* ── Leaflet popup ────────────────────────────── */
+    .leaflet-popup-content-wrapper{background:#fff!important;color:#1c1917!important;border-radius:20px!important;box-shadow:0 16px 48px rgba(0,0,0,.16),0 0 0 1px rgba(255,153,51,.1)!important;padding:0!important;overflow:hidden!important}
+    .leaflet-popup-tip{background:#fff!important}
+    .leaflet-popup-close-button{color:#78716c!important;font-size:22px!important;top:8px!important;right:10px!important;z-index:10!important}
+    .leaflet-popup-content{margin:0!important;font-family:'Inter',sans-serif!important;width:320px!important}
+    .leaflet-control-layers{border-radius:14px!important;border:1px solid rgba(255,153,51,0.2)!important;box-shadow:0 4px 20px rgba(0,0,0,.1)!important;font-family:'Inter',sans-serif!important;padding:8px 12px!important;background:rgba(255,255,255,0.95)!important;backdrop-filter:blur(12px)!important}
+
+    /* ── Custom markers ───────────────────────────── */
+    .custom-marker{display:flex;align-items:center;justify-content:center;position:relative}
+    .custom-marker .marker-pin{width:36px;height:36px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.28);border:2.5px solid rgba(255,255,255,.85)}
+    .custom-marker .marker-pin span{transform:rotate(45deg);font-size:11px;font-weight:800;color:#fff;font-family:'Inter',sans-serif}
+
+    /* ── Popup image ──────────────────────────────── */
+    .popup-img-container{width:100%;height:160px;overflow:hidden;position:relative}
+    .popup-img-container img{width:100%;height:100%;object-fit:cover;transition:transform .5s ease;cursor:zoom-in}
+    .popup-img-container:hover img{transform:scale(1.05)}
+    .popup-img-placeholder{width:100%;height:160px;display:flex;align-items:center;justify-content:center;font-size:44px;background:linear-gradient(135deg,rgba(255,153,51,0.1),rgba(19,136,8,0.08))}
+
+    /* ── Stats panel (bottom drawer) ─────────────── */
+    #stats-panel{
+      position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);
+      transition:transform .35s cubic-bezier(.4,0,.2,1);
+      z-index:1500;
+      background:rgba(255,255,255,0.97);
+      backdrop-filter:blur(20px);
+      border-radius:24px 24px 0 0;
+      box-shadow:0 -12px 48px rgba(0,0,0,.12), 0 0 0 1px rgba(255,153,51,0.1);
+      max-width:600px;width:100%
+    }
+    #stats-panel.open{transform:translateX(-50%) translateY(0)}
+    .stats-handle {
+      width: 36px; height: 4px;
+      background: rgba(255,153,51,0.3);
+      border-radius: 999px;
+      margin: 10px auto 0;
+    }
+
+    /* ── Animations ───────────────────────────────── */
+    @keyframes pulse-ring{0%{transform:scale(.8);opacity:.8}100%{transform:scale(2.4);opacity:0}}
+    .marker-pulse{animation:pulse-ring 1.8s ease-out infinite}
+    @keyframes float-dot{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+    .realtime-dot{animation:float-dot 2s ease-in-out infinite}
+    @keyframes slide-up{from{transform:translateY(20px) scale(.95);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+    .toast-anim{animation:slide-up .35s ease-out}
+    @keyframes fade-in-up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+    .fade-in-up{animation:fade-in-up .5s ease-out both}
+    @keyframes spin-slow{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+    .spin-slow{animation:spin-slow 3s linear infinite}
+    @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+    .progress-fill{transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+    @keyframes typing-dot{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+    .typing-d1{animation:typing-dot 1.2s .0s infinite}
+    .typing-d2{animation:typing-dot 1.2s .2s infinite}
+    .typing-d3{animation:typing-dot 1.2s .4s infinite}
+    @keyframes slide-in-right{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+    .slide-in-right{animation:slide-in-right .35s cubic-bezier(.4,0,.2,1)}
+    @keyframes slide-out-right{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}
+    .slide-out-right{animation:slide-out-right .3s cubic-bezier(.4,0,.2,1) forwards}
+
+    /* ── Action buttons ───────────────────────────── */
+    .btn-primary {
+      background: linear-gradient(135deg, #FF9933, #e8821a);
+      color: white;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 12px;
+      box-shadow: 0 4px 16px rgba(255,153,51,0.35);
+      transition: all 0.2s ease;
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(255,153,51,0.45); }
+    .btn-icon {
+      background: rgba(255,153,51,0.08);
+      border: 1px solid rgba(255,153,51,0.15);
+      border-radius: 10px;
+      color: #B45309;
+      transition: all 0.2s ease;
+    }
+    .btn-icon:hover { background: rgba(255,153,51,0.15); transform: translateY(-1px); }
+
+    /* ── Progress bar ─────────────────────────────── */
+    .trip-progress-track {
+      background: rgba(255,153,51,0.12);
+      border-radius: 999px;
+      height: 6px;
+      overflow: hidden;
+    }
+    .trip-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #FF9933, #e8821a, #138808);
+      border-radius: 999px;
+      transition: width 1.2s ease;
+    }
+
+    /* ── Segment popup ────────────────────────────── */
+    #segment-popup .bg-white {
+      border-radius: 18px;
+      border: 1px solid rgba(255,153,51,0.15);
+      box-shadow: 0 12px 40px rgba(0,0,0,.12);
+    }
+
+    /* ── Toast ────────────────────────────────────── */
+    #toast > div {
+      background: rgba(255,255,255,0.96);
+      border: 1px solid rgba(19,136,8,0.2);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.14);
+      backdrop-filter: blur(16px);
+    }
+
+    /* ── Responsive ───────────────────────────────── */
+    @media(max-width:1023px){#map-wrapper{inset:0;border-radius:0;box-shadow:none}}
+    @media(max-width:640px){#stats-panel{border-radius:20px 20px 0 0}}
+  </style>
+</head>
+
+<body class="bg-[#F8FAFC] text-stone-800 font-sans antialiased">
+
+<!-- ══ HEADER FLAG STRIPE ══ -->
+<div class="header-flag-stripe fixed top-0 left-0 right-0 z-[1001]"></div>
+
+<!-- ══════════════════════ TOP BAR ══════════════════════ -->
+<header id="app-header" class="fixed top-[3px] left-0 right-0 z-[1000]">
+  <div class="max-w-[1800px] mx-auto px-3 sm:px-5 h-[60px] flex items-center justify-between gap-2">
+
+    <!-- Logo + Title -->
+    <div class="flex items-center gap-2.5 min-w-0 shrink-0">
+      <div class="header-logo-ring w-9 h-9 rounded-2xl flex items-center justify-center shrink-0">
+        <svg class="w-[18px] h-[18px] text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+        </svg>
+      </div>
+      <div class="min-w-0">
+        <h1 class="font-display font-extrabold text-base sm:text-lg leading-tight gradient-text truncate">Gujarat Darshan 2026</h1>
+        <p class="text-[10px] text-stone-400 leading-none hidden sm:block font-medium">Aug 22–28 • Trip Planner</p>
+      </div>
+    </div>
+
+    <!-- Center: Live Clock + Progress -->
+    <div class="hidden lg:flex flex-col items-center gap-1 min-w-0">
+      <div class="flex items-center gap-2 text-[11px]">
+        <div class="flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block"></span>
+          <span id="live-clock" class="font-mono text-stone-500 font-semibold tracking-wide">--:--:-- --</span>
+        </div>
+        <span class="text-stone-300">•</span>
+        <span id="live-date" class="text-stone-500 font-medium">---</span>
+        <span class="text-stone-300">•</span>
+        <span id="progress-pct" class="font-bold gradient-text-warm">0%</span>
+      </div>
+      <div class="trip-progress-track w-48">
+        <div id="progress-bar" class="trip-progress-fill progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- Right: Action Buttons -->
+    <div class="flex items-center gap-1.5 shrink-0">
+      <button id="stats-btn" title="Trip Stats" class="btn-icon p-2">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      </button>
+      <button id="locate-btn" title="Reset map view" class="btn-icon p-2">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 1v4m0 14v4M1 12h4m14 0h4"/></svg>
+      </button>
+      <button id="copy-link-btn" class="btn-primary flex items-center gap-1.5 px-3 py-2">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+        <span class="hidden sm:inline">Share</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════════ MAIN LAYOUT ══════════════════════ -->
+<main class="pt-[63px] h-screen flex flex-col lg:flex-row">
+
+  <!-- ─── LEFT: ITINERARY SIDEBAR ─── -->
+  <aside id="sidebar" class="w-full lg:w-[440px] xl:w-[480px] shrink-0 overflow-y-auto relative z-10">
+    <div class="p-4 sm:p-5">
+
+      <!-- Hero Overview Card -->
+      <div class="hero-card mb-5 p-4 fade-in-up">
+        <!-- Gujarat identity icon strip -->
+        <div class="gujarat-icon-strip mb-2">
+          <span title="Statue of Unity">🗽</span>
+          <span class="text-stone-200">·</span>
+          <span title="Dwarkadhish">🛕</span>
+          <span class="text-stone-200">·</span>
+          <span title="Somnath">🕉️</span>
+          <span class="text-stone-200">·</span>
+          <span title="Sardar Sarovar Dam">🌊</span>
+          <span class="text-stone-200">·</span>
+          <span title="Adalaj Ni Vav">🏛️</span>
+          <span class="text-stone-200">·</span>
+          <span title="Rann of Kutch sunset">🌅</span>
+        </div>
+
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style="background:linear-gradient(135deg,rgba(255,153,51,0.15),rgba(19,136,8,0.1))">
+            <span class="text-2xl">🪔</span>
+          </div>
+          <div>
+            <h2 class="font-display font-extrabold text-lg gradient-text leading-tight">Gujarat Darshan</h2>
+            <p class="text-[11px] text-stone-400 font-medium">Road Trip • 7 Days • Aug 22–28, 2026</p>
+          </div>
+        </div>
+
+        <!-- Stats row -->
+        <div class="grid grid-cols-3 gap-2 mb-3">
+          <div class="stat-mini p-2.5 text-center">
+            <p class="text-xl font-extrabold gradient-text-warm font-display">7</p>
+            <p class="text-[9px] text-stone-400 uppercase tracking-wider font-bold mt-0.5">Days</p>
+          </div>
+          <div class="stat-mini p-2.5 text-center">
+            <p class="text-xl font-extrabold gradient-text font-display" id="header-stops">22</p>
+            <p class="text-[9px] text-stone-400 uppercase tracking-wider font-bold mt-0.5">Stops</p>
+          </div>
+          <div class="stat-mini p-2.5 text-center">
+            <p class="text-xl font-extrabold gradient-text-cool font-display" id="header-km">2250</p>
+            <p class="text-[9px] text-stone-400 uppercase tracking-wider font-bold mt-0.5">KM</p>
+          </div>
+        </div>
+
+        <!-- Countdown -->
+        <div id="countdown-box" class="p-3">
+          <p class="text-[10px] font-bold uppercase tracking-wider mb-1.5" style="color:#B45309">⏳ Trip Countdown</p>
+          <p id="countdown-text" class="text-stone-700 font-bold text-sm"></p>
+          <div id="countdown-chips" class="flex gap-2 mt-2 flex-wrap"></div>
+        </div>
+
+        <!-- Mobile clock -->
+        <div class="mt-3 flex items-center justify-center gap-2 lg:hidden text-[11px]">
+          <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block"></span>
+          <span id="live-clock-mobile" class="font-mono text-stone-500 font-semibold">--:--:-- --</span>
+          <span class="text-stone-300">|</span>
+          <span id="live-date-mobile" class="text-stone-400">---</span>
+        </div>
+      </div>
+
+      <!-- RT Status Card -->
+      <div id="rt-card" class="mb-4 p-3 fade-in-up hidden">
+        <div class="flex items-center gap-2 mb-0.5">
+          <span class="w-2 h-2 rounded-full animate-pulse inline-block" style="background:#138808"></span>
+          <span class="font-bold text-xs" style="color:#138808">Live Tracking Active</span>
+        </div>
+        <p id="rt-status" class="text-xs font-medium" style="color:#166534"></p>
+      </div>
+
+      <!-- Timeline -->
+      <div class="relative" id="timeline-container">
+        <div class="timeline-line"></div>
+        <!-- Days built by JS -->
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- ─── RIGHT: MAP ─── -->
+  <div class="flex-1 relative min-h-[50vh] lg:min-h-0" style="background:#f0f4f8">
+    <div id="map-wrapper">
+      <div id="map" class="w-full h-full"></div>
+    </div>
+
+    <!-- Map Legend -->
+    <div class="map-legend">
+      <p class="font-bold uppercase tracking-wider mb-2" style="font-size:9px;color:#B45309">LEGEND</p>
+      <div class="flex items-center gap-2 mb-1.5">
+        <div class="w-5 h-0.5 rounded" style="background:#FF9933"></div>
+        <span class="text-stone-600 font-medium text-[11px]">Completed Route</span>
+      </div>
+      <div class="flex items-center gap-2 mb-1.5">
+        <div class="w-5 h-0.5 rounded" style="border-top:2px dashed #a8a29e"></div>
+        <span class="text-stone-600 font-medium text-[11px]">Upcoming Route</span>
+      </div>
+      <div class="flex items-center gap-2 mb-1.5">
+        <div class="w-3 h-3 rounded-full border-2" style="background:#138808;border-color:#86efac"></div>
+        <span class="text-stone-600 font-medium text-[11px]">Current Position</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="w-3 h-1 rounded" style="background:#0EA5E9"></div>
+        <span class="text-stone-600 font-medium text-[11px]">Segment</span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ══════════════════════ STATS PANEL ══════════════════════ -->
+<div id="stats-panel">
+  <div class="stats-handle"></div>
+  <div class="flex items-center justify-between px-5 pt-3 pb-3 border-b" style="border-color:rgba(255,153,51,0.1)">
+    <div>
+      <h3 class="font-display font-bold text-base gradient-text">Trip Dashboard</h3>
+      <p class="text-[11px] text-stone-400 font-medium">Calculated estimates</p>
+    </div>
+    <button id="stats-close" class="p-2 rounded-xl text-stone-400 transition-colors" style="background:rgba(255,153,51,0.08)">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+    </button>
+  </div>
+  <div class="px-5 py-4 grid grid-cols-2 sm:grid-cols-4 gap-3 max-h-[60vh] overflow-y-auto">
+    <div class="p-3 rounded-2xl" style="background:linear-gradient(135deg,#FFF3E0,#FFE0B2);border:1px solid rgba(255,153,51,0.2)">
+      <p class="text-[10px] font-bold uppercase tracking-wider" style="color:#B45309">Total Distance</p>
+      <p class="text-2xl font-extrabold font-display mt-1" style="color:#B45309" id="stat-distance">—</p>
+    </div>
+    <div class="p-3 rounded-2xl bg-blue-50 border border-blue-100">
+      <p class="text-[10px] text-blue-400 font-bold uppercase tracking-wider">Driving Time</p>
+      <p class="text-2xl font-extrabold text-blue-600 font-display mt-1" id="stat-drive">—</p>
+    </div>
+    <div class="p-3 rounded-2xl bg-purple-50 border border-purple-100">
+      <p class="text-[10px] text-purple-400 font-bold uppercase tracking-wider">Places to Visit</p>
+      <p class="text-2xl font-extrabold text-purple-600 font-display mt-1" id="stat-places">—</p>
+    </div>
+    <div class="p-3 rounded-2xl" style="background:linear-gradient(135deg,rgba(19,136,8,0.08),rgba(19,136,8,0.04));border:1px solid rgba(19,136,8,0.15)">
+      <p class="text-[10px] font-bold uppercase tracking-wider" style="color:#166534">Journey Days</p>
+      <p class="text-2xl font-extrabold font-display mt-1" style="color:#166534">7</p>
+    </div>
+    <div class="col-span-2 sm:col-span-4 p-3 rounded-2xl" style="background:linear-gradient(135deg,#FFF8E1,#FFF3E0);border:1px solid rgba(255,153,51,0.2)">
+      <p class="text-[10px] font-bold uppercase tracking-wider mb-2" style="color:#B45309">Day-by-Day Drive Times</p>
+      <div id="stat-day-breakdown" class="space-y-1.5 text-xs"></div>
+    </div>
+    <div class="col-span-2 sm:col-span-4 p-3 rounded-2xl" style="background:linear-gradient(135deg,rgba(14,165,233,0.07),rgba(8,145,178,0.05));border:1px solid rgba(14,165,233,0.15)">
+      <p class="text-[10px] font-bold uppercase tracking-wider mb-2" style="color:#0369a1">🌧️ August Monsoon Advisory</p>
+      <p class="text-xs text-stone-600 leading-relaxed">August is peak monsoon season in Gujarat. Expect <b>30–50% longer travel times</b> on wet roads, particularly on <b>mountain/coastal routes</b> (Gir, Somnath, Dwarka). Allow buffer time at each stop and check weather forecasts daily. Gujarat roads in Saurashtra region may have occasional waterlogging.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ IMAGE MODAL ══════════════════════ -->
+<div id="img-modal" class="fixed inset-0 z-[3000] items-center justify-center bg-black/75 backdrop-blur-sm" style="display:none">
+  <div class="relative max-w-3xl w-full mx-4 rounded-3xl overflow-hidden shadow-2xl bg-white">
+    <button id="modal-close" class="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-white/90 hover:bg-white shadow-md flex items-center justify-center text-stone-600 hover:text-stone-900 transition-all">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+    <img id="modal-img" class="w-full max-h-[70vh] object-contain" src="" alt="" />
+    <div class="p-4">
+      <h3 id="modal-title" class="font-display font-bold text-lg gradient-text"></h3>
+      <p id="modal-desc" class="text-stone-500 text-sm mt-0.5"></p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ SEGMENT POPUP ══════════════════════ -->
+<div id="segment-popup" class="fixed z-[1200] hidden">
+  <div class="bg-white rounded-2xl shadow-xl border border-stone-200/60 p-4 text-xs w-64">
+    <div class="flex items-center justify-between mb-2">
+      <span class="font-bold text-stone-700 text-sm" id="seg-title">Route Segment</span>
+      <button id="seg-close" class="text-stone-400 hover:text-stone-700">✕</button>
+    </div>
+    <div id="seg-body" class="space-y-2"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════ TOAST ══════════════════════ -->
+<div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[4000] hidden">
+  <div class="toast-anim px-5 py-3 rounded-2xl bg-white border border-stone-200/60 shadow-xl flex items-center gap-3">
+    <svg class="w-5 h-5 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <span id="toast-msg" class="text-sm text-stone-700 font-semibold"></span>
+  </div>
+</div>
+
+<!-- ══════════════════════ SCRIPTS ══════════════════════ -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+(() => {
+'use strict';
+
+/* ═══════════════════════════════════════════════════════════
+   TRIP DATA
+═══════════════════════════════════════════════════════════ */
+const TRIP_DATA = [
+  {
+    day:'Pre-Day', date:'August 22, 2026', dateISO:'2026-08-22',
+    icon:'🚂', color:'#8b5cf6', summary:'Journey Begins — Train from Udupi',
+    startTime:'11:00', endTime:'23:59',
+    locations:[{
+      name:'Udupi Railway Station', lat:13.3363, lng:74.7708,
+      desc:'Board the train at 11:00 AM — overnight journey to Gujarat!',
+      time:'11:00 AM', image:'images/udupi.jpg', emoji:'🚉',
+      info:'The train journey from Udupi to Vadodara is approximately 22 hours. Carry enough snacks, water, and entertainment for the overnight ride.',
+      tips:'💡 Keep tickets & IDs handy. Arrive 30 min early. Set alarms for station stops.',
+      gmapUrl:'https://maps.app.goo.gl/VkAR2pTarMN8pi3n8',
+      directionsUrl:'https://maps.app.goo.gl/w5JDmWN6ESRmYLWF7'
+    }]
+  },
+  {
+    day:'Day 1', date:'August 23, 2026', dateISO:'2026-08-23',
+    icon:'🏛️', color:'#f97316', summary:'Vadodara → Sardar Sarovar → Statue of Unity → Poicha → Chotila',
+    startTime:'10:30', endTime:'21:30',
+    locations:[
+      {
+        name:'Vadodara Railway Station', lat:22.310874055854914, lng:73.18086402511723,
+        desc:'Welcome to Vadodara, Gujarath',
+        time:'10:30 AM', image:'images/vadodara.jpg', emoji:'🚄',
+        info:'Welcome to vadodara.',
+        gmapUrl:'https://maps.app.goo.gl/uDwh4yG2kPidEuMr9',
+        directionsUrl:'https://maps.app.goo.gl/sf8Qb5sagXJ1mgZJ6'
+      },
+      {
+        name:'Sardar Sarovar Dam', lat:21.8307, lng:73.7497,
+        desc:'One of the largest dams in the world, built on the Narmada River.',
+        time:'1:30 PM', image:'images/sardar_sarovar_dam.jpg', emoji:'🌊',
+        info:'Sardar Sarovar Dam is a gravity dam on the Narmada River, 163m tall. The dam provides water and electricity to four Indian states.',
+        tips:'💡 Entry fee: ₹30/person. Carry sunscreen & hats. Photography allowed. Visit the garden & viewpoint.',
+        gmapUrl:'https://maps.app.goo.gl/g9kP4UhU71PvbBMY8',
+        directionsUrl:'https://maps.app.goo.gl/sh9SFQ5mMPvSE3gn7'
+      },
+      {
+        name:'Statue of Unity', lat:21.8395, lng:73.7200,
+        desc:"World's tallest statue (182m) — Sardar Vallabhbhai Patel tribute.",
+        time:'3:00 PM', image:'images/statue_of_unity.jpg', emoji:'🗽',
+        info:"Standing at 182 metres, the Statue of Unity is the world's tallest statue. The viewing gallery at 153m offers a panoramic view of the Narmada dam.",
+        tips:'💡 Book online at soutickets.in (₹350 gallery). Open 8 AM–6 PM. Closed Mondays.',
+        gmapUrl:'https://maps.app.goo.gl/KaoAei7FEhNPyRMv8',
+        directionsUrl:'https://maps.app.goo.gl/SZbqzJJE5e9WExYaA'
+      },
+      {
+        name:'Poicha Temple', lat:21.9884, lng:73.4855,
+        desc:'Nilkanthdham Swaminarayan Temple — beautiful architecture.',
+        time:'7:00 PM', image:'images/poicha.jpg', emoji:'🛕',
+        info:"Nilkanthdham Swaminarayan Temple in Poicha is famous for its intricate carvings, beautiful gardens, and evening light show.",
+        tips:'💡 Perfect for an evening visit. Allow 1-2 hours.',
+        gmapUrl:'https://maps.app.goo.gl/AgoFKKz7Y9KULG6d6',
+        directionsUrl:'https://maps.app.goo.gl/qcivK95gX5sDDn44A'
+      },
+      {
+        name:'Chotila ', lat:22.4229, lng:71.1960,
+        time:'2:30 AM', image:null, emoji:'⛰️',
+        info:'Chotila trust lodge is booked.',
+        tips:'💡 check-in and sleep early.',
+        gmapUrl:'https://www.google.com/maps/place/Chotila+Temple/@22.4229,71.1960,15z',
+        directionsUrl:'https://maps.app.goo.gl/vz9dTWox5yCCcosJ9'
+      }
+
+    ],
+    stay:'Night stay at Chotila'
+  },
+  {
+    day:'Day 2', date:'August 24, 2026', dateISO:'2026-08-24',
+    icon:'⛰️', color:'#ec4899', summary:'Chotila → Virpur → Khodaldham → Jambhuvan Caves → Dwarka',
+    startTime:'08:00', endTime:'21:00',
+    locations:[
+      {
+        name:'Chotila Temple', lat:22.420492961184863, lng:71.20684277498097,
+        desc:'Chamunda Mata Temple atop a 1,173ft hill with stunning views.',
+        time:'6:30 AM', image:'images/chotila.jpg', emoji:'⛰️',
+        info:'The Chamunda Mata Temple sits on top Chotila Hill (1,173 ft). You can climb 500+ steps or take the ropeway. Offers breathtaking 360° views.',
+        tips:'💡 Comfortable shoes needed. Ropeway: ₹75/person. Early visit recommended.',
+        gmapUrl:'https://www.google.com/maps/place/Chotila+Temple/@22.420492961184863,71.20684277498097z',
+        directionsUrl:'https://www.google.com/maps/dir/?api=1&destination=22.420492961184863,71.20684277498097&travelmode=driving'
+      },
+      {
+        name:'Virpur Temple', lat:21.84895366076191, lng:70.69753001970682,
+        desc:'Jalaram Bapa Mandir — renowned pilgrimage site.',
+        time:'10:00 AM', image:null, emoji:'🙏',
+        info:'Virpur is the birthplace of the revered saint Jalaram Bapa. The temple is famous for serving free meals (prasad) to all visitors.',
+        tips:'💡 The temple does not accept donations. Have lunch prasad here.'
+      },
+      {
+        name:'Khodaldham Temple', lat:21.7577, lng:71.0730,
+        desc:'Grand Khodiyar Maa temple — modern architectural marvel.',
+        time:'3:00 PM', image:'images/khodaldham.jpg', emoji:'🛕',
+        info:'Khodaldham is a magnificent temple complex dedicated to Goddess Khodiyar Maa, built with white marble, featuring a museum and beautiful gardens.',
+        tips:'💡 Free entry. Shoes must be removed. Prasad available.',
+        gmapUrl:'https://maps.app.goo.gl/ZB52tnM99kBnBn3a8',
+        directionsUrl:'https://www.google.com/maps/dir/?api=1&destination=21.79148813429397,70.68990719098204&travelmode=driving'
+      },
+      {
+        name:'Jambhuvan Caves', lat:21.71229251379024, lng:69.7172654596976,
+        desc:'Ancient cave associated with Jambavan from the Ramayana.',
+        time:'5:30 PM', image:'images/jambhan.jpg', emoji:'🕳️',
+        info:'Legendary cave system linked to the bear king Jambavan. Inside the cave, you can see naturally formed stalactites and a Shiva Linga.',
+        tips:'💡 The cave can be slightly humid and dark. Bring a flashlight or use your phone.',
+        gmapUrl:'https://maps.app.goo.gl/r4VsHDwDqrWkKjmF7',
+        directionsUrl:'https://www.google.com/maps/dir/?api=1&destination=21.71229251379024,69.7172654596976&travelmode=driving'
+      },
+      {
+        name:'Dwarka', lat:22.23828828918766, lng: 68.96720342820187,
+        desc:'Relax after long journey.',
+        time:'8:00 PM', image:'images/dwarka.jpg', emoji:'🛕',
+        info:'We will be staying here for 2 days.',
+        tips:'💡 Rest',
+        gmapUrl:'https://maps.app.goo.gl/w8dTYoyoZR6BY1VG6',
+        directionsUrl:'https://www.google.com/maps/dir/?api=1&destination=22.2376,68.9673&travelmode=driving'
+      }
+    ],
+    stay:'Night stay at Dwarka'
+  },
+  {
+    day:'Day 3', date:'August 25, 2026', dateISO:'2026-08-25',
+    icon:'🌊', color:'#10b981', summary:'Dwarka Temples & Shivrajpur Beach',
+    startTime:'07:30', endTime:'20:00',
+    locations:[
+      {
+        name:'Dwarkadhish Temple', lat:22.2376, lng:68.9673,
+        desc:'Ancient 5-storey Krishna temple — one of Char Dham.',
+        time:'8:00 AM', image:'images/dwarkadhish_temple.jpg', emoji:'🛕',
+        info:'Dwarkadhish Temple (Jagat Mandir) dedicated to Lord Krishna. Five-storey structure, over 2,500 years old. Temple flag changed 5 times a day.',
+        tips:'💡 Open 6:30 AM–1 PM, 5–9:30 PM. No photography inside. Mobiles not allowed.',
+        gmapUrl:'https://maps.app.goo.gl/3T338ZmY5BhWardp6',
+        directionsUrl:'https://www.google.com/maps/dir/?api=1&destination=22.2376,68.9673&travelmode=driving'
+      },
+      {
+        name:'Rukmini Devi Temple', lat:22.257385353485923, lng:68.96460437040393,
+        desc:'Explore places around Dwarka (Rukmini Devi Temple).',
+        time:'6:30 PM', image:'images/rukminidevi.jpg', emoji:'🕉️',
+        info:'An architectural masterpiece dedicated to Goddess Rukmini, Lord Krishna\'s chief queen. Known for its rich carvings.',
+        tips:'💡 Just a short drive outside Dwarka main town.',
+        gmapUrl:'https://maps.app.goo.gl/ygU6CP93pm4DkNRF8',
+        directionsUrl:'https://www.google.com/maps/dir/?api=1&destination=22.257385353485923,68.96460437040393&travelmode=driving'
+      },
+      {
+        name:'Bet Dwarka', lat:22.45231812140192, lng:69.08457214433355,
+        desc:'Sacred island temple — accessible by boat ride.',
+        time:'12:30 PM', image:'images/bet_dwarka.jpg', emoji:'🚤',
+        info:"Bet Dwarka is an island believed to be Lord Krishna's original residence. 30-min boat ride from Okha port. Important archaeological site.",
+        tips:'💡 Boat fare: ~₹50-100/person. Boats run 7 AM–6 PM. Keep belongings waterproof.',
+        gmapUrl:'https://maps.app.goo.gl/u6SBxjjnnmin9cUb9',
+        directionsUrl:'https://www.google.com/maps/dir/?api=1&destination=22.45231812140192,69.08457214433355&travelmode=driving'
+      },
+      {
+        name:'Nageshwar Jyotirlinga', lat:22.335907030962126, lng:69.08716297494111,
+        desc:'One of the 12 sacred Jyotirlingas of Lord Shiva.',
+        time:'10:30 AM', image:'images/nageshwar_jyotirlinga.jpg', emoji:'🔱',
+        info:'Nageshwar Jyotirlinga is one of the 12 Jyotirlingas. Features a massive 80-ft statue of Lord Shiva. Underground sanctum houses the sacred lingam.',
+        tips:'💡 Open 5 AM–9 PM. Free entry. 80-ft Shiva statue is a must-see photo spot.',
+        gmapUrl:'https://maps.app.goo.gl/KnHE4c5oFMbK6P3M9',
+        directionsUrl:'https://www.google.com/maps/dir/?api=1&destination=22.335907030962126,69.08716297494111&travelmode=driving'
+      },
+      {
+        name:'Shivrajpur Beach', lat:22.3275, lng:68.9507,
+        desc:'Blue flag certified pristine white sand beach.',
+        time:'4:00 PM', image:'images/shivrajpur_beach.jpg', emoji:'🏖️',
+        info:'A stunning Blue Flag certified beach known for its clear water, white sand, and beautiful sunset views. Great spot to relax after temple hopping.',
+        tips:'💡 Perfect for sunset! Activities like scuba diving and boating might be available depending on the season.',
+        gmapUrl:'https://maps.app.goo.gl/qBbEEcBTaXdvhuyi6',
+        directionsUrl:'https://www.google.com/maps/dir/?api=1&destination=22.340780487928043,68.95895053557427&travelmode=driving'
+      },
+      {
+        name:'Dwarka', lat:22.23689277889931, lng:68.96638188156336,
+        desc:'Relax after long journey.',
+        time:'8:00 PM', image:'images/dwarka.jpg', emoji:'🛕',
+        info:'We will be staying here for 2 days.',
+        tips:'💡 Rest',
+        gmapUrl:'https://maps.app.goo.gl/w8dTYoyoZR6BY1VG6',
+        directionsUrl:'https://www.google.com/maps/dir/?api=1&destination=22.2376,68.9673&travelmode=driving'
+      }
+      
+    ],
+    stay:'Night stay at Dwarka'
+  },
+  {
+    day:'Day 4', date:'August 26, 2026', dateISO:'2026-08-26',
+    icon:'🌅', color:'#0ea5e9', summary:'Dwarka → Somnath & Surrounding Sacred Sites',
+    startTime:'07:30', endTime:'20:00',
+    locations:[
+      {
+        name:'Dwarka', lat:22.23690277890941, lng:68.96648189156346,
+        emoji:'🛕'
+      },
+      {
+        name:'Somnath Temple', lat:20.8880, lng:70.4016,
+        desc:'First among the 12 Jyotirlingas.',
+        time:'2:30 PM', image:'images/somnath_temple.jpg', emoji:'🕉️',
+        info:'Somnath Temple, first among 12 Jyotirlingas, on the western coast of Gujarat. Rebuilt many times, current temple in Chalukya style (1951).',
+        tips:'💡 Do NOT miss the Sound & Light show at 8 PM (₹25). Evening aarti at 7 PM is magical.',
+        gmapUrl:'https://maps.app.goo.gl/D4B2By9vVztfmXe48',
+        directionsUrl:'https://www.google.com/maps/dir/?api=1&destination=20.8880,70.4016&travelmode=driving'
+      },
+      {
+        name:'Bhalka Tirth', lat:20.911628766174143, lng:70.38392625338913,
+        desc:'Sacred spot where Lord Krishna was struck by a hunter’s arrow.',
+        time:'4:30 PM', image:'images/bhalka_theerth.jpg', emoji:'🏹',
+        info:'Bhalka Tirth is the site where Lord Krishna is believed to have been mistakenly shot by a hunter named Jara, leading to his heavenly abode.',
+        tips:'💡 Very peaceful temple. Spend 30-45 minutes here.',
+        gmapUrl:'https://maps.app.goo.gl/vz4gepo2bkFtKnxe9',
+        directionsUrl:'https://www.google.com/maps/dir/?api=1&destination=20.911628766174143,70.38392625338913&travelmode=driving'
+      },
+      {
+        name:'Triveni Sangam', lat:20.88435895867861, lng:70.41285830734697,
+        desc:'Confluence of three holy rivers.',
+        time:'5:30 PM', image:'images/triveni_sangam.jpg', emoji:'🌊',
+        info:'The sacred confluence of three rivers: Hiran, Kapila, and the mystical Saraswati, meeting the Arabian Sea.',
+        tips:'💡 Boat rides might be available. Good place to feed the fish/birds.',
+        gmapUrl:'https://maps.app.goo.gl/8D6Vhs9TeRrqHK2z5',
+        directionsUrl:'https://www.google.com/maps/dir/?api=1&destination=20.884840287692523,70.4123016327964&travelmode=driving'
+      },
+      {
+        name:'Somnath Beach', lat:20.883819009861536, lng:70.4067913038283,
+        desc:'Relax by the beach right next to the Somnath Temple.',
+        time:'6:30 PM', image:'images/somnath_beach.jpg', emoji:'🏖️',
+        info:'A wide sandy beach perfect for evening strolls and enjoying the breeze. Swimming is generally not recommended here due to strong currents.',
+        tips:'💡 Great views of the temple from the beach.',
+        gmapUrl:'https://maps.app.goo.gl/ng8QUGjJ2PxVbpYe9',
+        directionsUrl:'https://www.google.com/maps/dir/?api=1&destination=20.887138504541202,70.40804068472454&travelmode=driving'
+      }
+    ],
+    stay:'Night stay at Somnath'
+  },
+  {
+    day:'Day 5', date:'August 27, 2026', dateISO:'2026-08-27',
+    icon:'⛲', color:'#8b5cf6', summary:'Somnath → Nishkalank Mahadev → Salangpur',
+    startTime:'06:45', endTime:'19:00',
+    locations:[
+      {
+        name:'Somnath', lat:20.90712526317518, lng:70.38399661147548,
+        emoji:'🛕'
+      },
+      {
+        name:'Nishkalank Mahadev Temple', lat:21.597486956010616, lng:72.29267553590044,
+        desc:'Mystical temple submerged in the sea — visible at low tide.',
+        time:'12:00 PM', image:'images/nishkalank_mahadev.jpg', emoji:'🌊',
+        info:"Nishkalank Mahadev: unique Shiva temple submerged in the sea, accessible only at low tide. The Pandavas built it to atone for killing kin in the Mahabharata.",
+        tips:' CRITICAL: Check tide timings! Only accessible at low tide. Wear shoes you can get wet. Ask locals for exact timing.',
+        gmapUrl:'https://maps.app.goo.gl/jXyhumHyfCyneLuz5',
+        directionsUrl:'https://www.google.com/maps/dir/?api=1&destination=21.597486956010616,72.29267553590044&travelmode=driving'
+      },
+      {
+        name:'Salangpur Hanuman Temple', lat:22.159512854511078, lng:71.77092042788502,
+        desc:'Shree Kashtabhanjan Dev Hanumanji Mandir.',
+        time:'5:00 PM', image:'images/salangpur_hanuman.jpg', emoji:'🚩',
+        info:'A highly revered temple dedicated to Lord Hanuman. Famous for the Kashtabhanjan Dev idol and its beautiful, massive campus.',
+        tips:'💡 Free food (prasad) is served to all devotees. Huge 54ft statue of Hanumanji is a must-see.',
+        gmapUrl:'https://maps.app.goo.gl/sdWj6smmHXKt5ppn9',
+        directionsUrl:'https://www.google.com/maps/dir/?api=1&destination=22.159512854511078,71.77092042788502&travelmode=driving'
+      }
+    ],
+    stay:'Night stay at Salangpur'
+  },
+  {
+    day:'Day 6', date:'August 28, 2026', dateISO:'2026-08-28',
+    icon:'🏛️', color:'#eab308', summary:'Salangpur → Akshardham → Adalaj → Ahmdebad Railway Station',
+    startTime:'08:00', endTime:'15:05',
+    locations:[
+      {
+        name:'Salangpur', lat:22.15844469007127, lng:71.77480963093222, 
+        emoji:'🛕'
+      },
+      {
+        name:'Adalaj Ni Vav', lat:23.166765146896783, lng:72.58020563838676,
+        desc:'Ornate 15th-century five-storey stepwell with stunning carvings.',
+        time:'12:00 PM', image:'images/adalaj_vav.jpg', emoji:'🏛️',
+        info:'Built in 1498 by Queen Rudabai. Five-storey stepwell in Indo-Islamic style with carvings of flowers, birds, and geometric patterns.',
+        tips:'💡 Free entry. Photography highly encouraged — light patterns are stunning.',
+        gmapUrl:'https://maps.app.goo.gl/ToGW6Z3Nxy9ajSN66',
+        directionsUrl:'https://www.google.com/maps/dir/?api=1&destination=23.166765146896783,72.58020563838676&travelmode=driving'
+      },
+      {
+        name:'Akshardham Temple', lat:23.229448534451375, lng:72.67419657829227,
+        desc:'Swaminarayan Akshardham — stunning spiritual complex.',
+        time:'10:00 AM', image:'images/akshardham_temple.jpg', emoji:'🕍',
+        info:"Swaminarayan Akshardham built with 6,000 tonnes of pink sandstone. Features main mandir and beautiful gardens.",
+        tips:'💡 Free entry. No phones/cameras allowed inside. Lockers available.',
+        gmapUrl:'https://maps.app.goo.gl/o2EXmg5mSvMcRTVu9',
+        directionsUrl:'https://www.google.com/maps/dir/?api=1&destination=23.233281612807296,72.67471499804073&travelmode=driving'
+      },
+      {
+        name:'Ahmedabad Junction', lat:23.026663229158462, lng:72.60140588731538,
+        desc:'Train departs at 3:05 PM (Reach by 2:00 PM).',
+        time:'2:00 PM', image:'images/ahmdebad_railway_station.jpg', emoji:'🚂',
+        info:'Ahmedabad Junction (Kalupur). Reach at least 45 minutes before departure. Food stalls, waiting rooms, and Wi-Fi available.',
+        tips:'💡 Reach station by 2:00 PM latest. Buy snacks for return journey!',
+        gmapUrl:'https://maps.app.goo.gl/8FN1x5YKafHNmAii7',
+        directionsUrl:'https://www.google.com/maps/dir/?api=1&destination=23.026663229158462,72.60140588731538&travelmode=driving'
+      }
+    ]
+  }
+];
+
+/* ═══════════════════════════════════════════════════════════
+   AI TRAFFIC & TIME MANAGEMENT ENGINE
+═══════════════════════════════════════════════════════════ */
+const TripAI = {
+
+  // Haversine formula for distance (km)
+  haversine(lat1, lng1, lat2, lng2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  },
+
+  // Road multiplier: converts aerial distance to road distance + speed
+  getRoadFactor(lat1, lat2) {
+    // Coastal / remote Gujarat areas = winding roads
+    const avgLat = (lat1 + lat2) / 2;
+    if (avgLat < 21.5) return { factor: 1.55, speed: 52 }; // Coastal Saurashtra, narrow roads
+    if (avgLat < 22.5) return { factor: 1.42, speed: 58 }; // Dwarka region
+    return { factor: 1.3, speed: 65 };                     // NH routes, Ahmedabad area
+  },
+
+  // Traffic multiplier based on time of day + August monsoon
+  getTrafficFactor(departHour) {
+    const MONSOON_BASE = 1.30; // August base delay
+    let tod = 1.0;
+    if (departHour >= 8 && departHour <= 10)  tod = 1.22; // Morning rush
+    if (departHour >= 17 && departHour <= 19) tod = 1.18; // Evening rush
+    if (departHour >= 12 && departHour <= 14) tod = 1.08; // Lunch
+    return MONSOON_BASE * tod;
+  },
+
+  // Get traffic level label
+  getTrafficLevel(factor) {
+    if (factor <= 1.35) return { label: '🟢 Light', cls: 'traffic-light' };
+    if (factor <= 1.55) return { label: '🟡 Moderate', cls: 'traffic-moderate' };
+    return { label: '🔴 Heavy', cls: 'traffic-heavy' };
+  },
+
+  // Estimate drive time between two locations
+  getDriveTime(loc1, loc2, departHour = 9) {
+    const dist = this.haversine(loc1.lat, loc1.lng, loc2.lat, loc2.lng);
+    const { factor, speed } = this.getRoadFactor(loc1.lat, loc2.lat);
+    const roadDist = dist * factor;
+    const trafficF = this.getTrafficFactor(departHour);
+    const minutes = Math.round((roadDist / speed) * 60 * trafficF);
+    const level = this.getTrafficLevel(trafficF);
+    return { minutes, roadDist: Math.round(roadDist), trafficF, level };
+  },
+
+  // Format minutes to human string
+  fmtMins(m) {
+    if (m < 60) return `${m} min`;
+    const h = Math.floor(m / 60), mn = m % 60;
+    return mn ? `${h}h ${mn}min` : `${h}h`;
+  },
+
+  // Analyse all stops in a day
+  analyzeDay(dayIndex) {
+    const day = TRIP_DATA[dayIndex];
+    const locs = day.locations;
+    if (locs.length < 2) return { segments:[], totalDrive:0, totalDist:0, warnings:[] };
+
+    const segments = [];
+    let totalDrive = 0, totalDist = 0;
+    const warnings = [];
+
+    for (let i = 0; i < locs.length - 1; i++) {
+      const deptHour = parseInt(day.startTime.split(':')[0]) + i * 2;
+      const dt = this.getDriveTime(locs[i], locs[i+1], Math.min(deptHour, 18));
+      segments.push({ from: locs[i].name, to: locs[i+1].name, ...dt });
+      totalDrive += dt.minutes;
+      totalDist += dt.roadDist;
+    }
+
+    if (totalDrive > 480) warnings.push(`⚠️ Very long driving day (~${this.fmtMins(totalDrive)}). Consider leaving early!`);
+    if (dayIndex === 1) warnings.push('⚠️ Day 1: Poicha to Chotila is a very long drive. Prepare for a late night arrival.');
+    if (dayIndex === 3) warnings.push('⚠️ Day 3: Bet Dwarka boat ride depends on weather. Check sea conditions!');
+    if (dayIndex === 5) warnings.push('⚠️ Day 5: Nishkalank Mahadev — check tide chart before visiting.');
+    if (dayIndex === 6) warnings.push('🚨 Day 6: MUST reach Ahmedabad station by 2:00 PM for the 3:05 PM train!');
+
+    return { segments, totalDrive, totalDist, warnings };
+  },
+
+  // Total trip stats
+  getTripStats() {
+    let totalDist = 0, totalDrive = 0;
+    TRIP_DATA.forEach((day, i) => {
+      const { totalDist: d, totalDrive: t } = this.analyzeDay(i);
+      totalDist += d; totalDrive += t;
+    });
+    return { totalDist, totalDrive };
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════════════════════════ */
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  toast.classList.remove('hidden');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => toast.classList.add('hidden'), 3000);
+}
+
+function getTripProgress() {
+  const now = new Date();
+  const start = new Date('2026-08-22T11:00:00+05:30');
+  const end   = new Date('2026-08-28T15:05:00+05:30');
+  if (now < start) return 0;
+  if (now > end) return 100;
+  return Math.round(((now - start) / (end - start)) * 100);
+}
+
+function getCurrentDayIndex() {
+  const now = new Date();
+  for (let i = TRIP_DATA.length - 1; i >= 0; i--) {
+    if (now >= new Date(TRIP_DATA[i].dateISO + 'T00:00:00+05:30')) return i;
+  }
+  return 0;
+}
+
+function isCompleted(dayIndex) {
+  const now = new Date();
+  if (dayIndex >= TRIP_DATA.length - 1) return now > new Date(TRIP_DATA[TRIP_DATA.length-1].dateISO + 'T23:59:59+05:30');
+  return now >= new Date(TRIP_DATA[dayIndex+1].dateISO + 'T00:00:00+05:30');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LIVE CLOCK
+═══════════════════════════════════════════════════════════ */
+function updateClock() {
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true, timeZone:'Asia/Kolkata' });
+  const dateStr = now.toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'short', year:'numeric', timeZone:'Asia/Kolkata' });
+  ['live-clock','live-clock-mobile'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = timeStr.toUpperCase(); });
+  ['live-date','live-date-mobile'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = dateStr; });
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+/* ═══════════════════════════════════════════════════════════
+   COUNTDOWN TIMER
+═══════════════════════════════════════════════════════════ */
+function updateCountdown() {
+  const now = new Date();
+  const tripStart = new Date('2026-08-22T11:00:00+05:30');
+  const tripEnd   = new Date('2026-08-28T15:05:00+05:30');
+  const box = document.getElementById('countdown-box');
+  const txt = document.getElementById('countdown-text');
+  const chips = document.getElementById('countdown-chips');
+
+  if (now < tripStart) {
+    const diff = tripStart - now;
+    const days = Math.floor(diff / 86400000);
+    const hrs  = Math.floor((diff % 86400000) / 3600000);
+    const mins = Math.floor((diff % 3600000) / 60000);
+    const secs = Math.floor((diff % 60000) / 1000);
+    txt.textContent = 'Trip starts in:';
+    chips.innerHTML = [
+      `<div class="countdown-chip"><p class="text-xl font-extrabold font-display" style="color:#B45309">${days}</p><p class="text-[9px] font-bold uppercase" style="color:#D97706">Days</p></div>`,
+      `<div class="countdown-chip"><p class="text-xl font-extrabold font-display" style="color:#B45309">${hrs}</p><p class="text-[9px] font-bold uppercase" style="color:#D97706">Hrs</p></div>`,
+      `<div class="countdown-chip"><p class="text-xl font-extrabold font-display" style="color:#138808">${mins}</p><p class="text-[9px] font-bold uppercase" style="color:#16a34a">Min</p></div>`,
+      `<div class="countdown-chip countdown-pulse"><p class="text-xl font-extrabold font-display" style="color:#0EA5E9">${secs}</p><p class="text-[9px] font-bold uppercase" style="color:#0284c7">Sec</p></div>`
+    ].join('');
+    box.style.background = '';
+  } else if (now <= tripEnd) {
+    const diff = tripEnd - now;
+    const days = Math.floor(diff / 86400000);
+    const hrs  = Math.floor((diff % 86400000) / 3600000);
+    txt.textContent = `🎉 Trip is LIVE! Ends in ${days}d ${hrs}h`;
+    chips.innerHTML = `<div style="padding:6px 14px;border-radius:10px;background:rgba(19,136,8,0.12);border:1px solid rgba(19,136,8,0.25);font-weight:700;font-size:12px;color:#138808" class="animate-pulse">● Gujarat Darshan in Progress!</div>`;
+    box.style.background = '';
+  } else {
+    txt.textContent = '🎊 Trip Completed! What a journey!';
+    chips.innerHTML = `<div style="padding:6px 14px;border-radius:10px;background:rgba(255,153,51,0.12);border:1px solid rgba(255,153,51,0.3);font-weight:700;font-size:12px;color:#B45309">🏆 Gujarat Darshan 2026 — Done!</div>`;
+    box.style.background = '';
+  }
+}
+updateCountdown();
+setInterval(updateCountdown, 1000);
+
+/* ═══════════════════════════════════════════════════════════
+   BUILD TIMELINE WITH AI DRIVE INFO
+═══════════════════════════════════════════════════════════ */
+const timelineContainer = document.getElementById('timeline-container');
+
+TRIP_DATA.forEach((day, dIdx) => {
+  const completed = isCompleted(dIdx);
+  const isCurrent = dIdx === getCurrentDayIndex() && !completed;
+  const analysis = TripAI.analyzeDay(dIdx);
+
+  const card = document.createElement('div');
+  card.className = 'day-card relative pl-11 pr-2 py-4 mb-2 rounded-2xl';
+  card.dataset.dayIndex = dIdx;
+  card.style.animationDelay = `${dIdx * 0.07}s`;
+  card.classList.add('fade-in-up');
+
+  // Timeline dot
+  const dot = document.createElement('div');
+  dot.className = 'absolute left-[11px] top-5 w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center z-10';
+  if (completed) {
+    dot.style.cssText = `border-color:${day.color};background:${day.color}`;
+    dot.innerHTML = '<svg class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>';
+  } else if (isCurrent) {
+    dot.style.cssText = `border-color:${day.color};background:${day.color}`;
+    dot.innerHTML = '<div class="w-2 h-2 rounded-full bg-white"></div>';
+    const pulse = document.createElement('div');
+    pulse.className = 'absolute left-[11px] top-5 w-[18px] h-[18px] rounded-full marker-pulse z-[5]';
+    pulse.style.background = day.color;
+    card.appendChild(pulse);
+  } else {
+    dot.style.cssText = 'border-color:#d6d3d1;background:#fafaf9';
+  }
+  card.appendChild(dot);
+
+  // Header
+  const header = document.createElement('div');
+  header.className = 'flex items-center gap-2 mb-1 flex-wrap';
+  header.innerHTML = `
+    <span class="text-base">${day.icon}</span>
+    <span class="font-display font-extrabold text-sm" style="color:${day.color}">${day.day}</span>
+    <span class="text-[10px] text-stone-400 font-medium ml-auto">${day.date.replace(', 2026','')}</span>
+    ${isCurrent ? '<span class="text-[9px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-bold border border-emerald-200">● NOW</span>' : ''}
+    ${completed ? '<span class="text-[9px] px-2 py-0.5 rounded-full bg-stone-100 text-stone-500 font-semibold">✓ Done</span>' : ''}
+  `;
+  card.appendChild(header);
+
+  // Summary + AI drive info
+  const summaryRow = document.createElement('div');
+  summaryRow.className = 'flex items-center gap-2 mb-2 flex-wrap';
+  summaryRow.innerHTML = `<p class="text-sm text-stone-600 font-semibold">${day.summary}</p>`;
+  if (analysis.totalDrive > 0) {
+    summaryRow.innerHTML += `<span class="drive-pill">🚗 ~${TripAI.fmtMins(analysis.totalDrive)} • 📍 ${analysis.totalDist} km</span>`;
+  }
+  if (analysis.warnings.length > 0) {
+    const wBadge = document.createElement('span');
+    wBadge.className = 'text-[9px] px-2 py-0.5 rounded-full bg-red-50 text-red-600 font-bold border border-red-100 cursor-pointer';
+    wBadge.textContent = '⚠️ Alert';
+    wBadge.title = analysis.warnings.join('\n');
+    summaryRow.appendChild(wBadge);
+  }
+  card.appendChild(summaryRow);
+
+  // AI segment info
+  if (analysis.segments.length > 0) {
+    const segWrap = document.createElement('div');
+    segWrap.className = 'mb-2 space-y-1';
+    analysis.segments.forEach(seg => {
+      const s = document.createElement('div');
+      s.className = 'flex items-center gap-1.5 text-[10px] text-stone-400 font-medium pl-1';
+      s.innerHTML = `<span>🚗</span><span class="truncate">${seg.from.split(' ')[0]} → ${seg.to.split(' ')[0]}</span><span class="text-stone-500 font-bold">~${TripAI.fmtMins(seg.minutes)}</span><span class="traffic-badge ${seg.level.cls}">${seg.level.label}</span>`;
+      segWrap.appendChild(s);
+    });
+    card.appendChild(segWrap);
+  }
+
+  // Activities
+  day.locations.forEach((loc, lIdx) => {
+    const item = document.createElement('div');
+    item.className = 'activity-item flex items-start gap-2 text-xs group';
+    item.dataset.dayIndex = dIdx;
+    item.dataset.locIndex = lIdx;
+    item.innerHTML = `
+      <span class="mt-0.5 text-sm shrink-0">${loc.emoji}</span>
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <span class="text-stone-700 font-semibold group-hover:text-orange-600 transition-colors">${loc.name}</span>
+          <span class="text-stone-400 text-[10px]">${loc.time||''}</span>
+        </div>
+        <p class="text-stone-400 text-[10px] mt-0.5 leading-relaxed line-clamp-2">${loc.desc}</p>
+        <div class="flex items-center gap-1.5 mt-1">
+          ${loc.gmapUrl ? `<a href="${loc.gmapUrl}" target="_blank" rel="noopener" class="popup-link-btn bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-100 rounded-lg px-2 py-0.5 text-[10px] font-semibold no-underline flex items-center gap-1" onclick="event.stopPropagation()">
+            <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>Map
+          </a>` : ''}
+          ${loc.directionsUrl ? `<a href="${loc.directionsUrl}" target="_blank" rel="noopener" class="popup-link-btn bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-100 rounded-lg px-2 py-0.5 text-[10px] font-semibold no-underline flex items-center gap-1" onclick="event.stopPropagation()">
+            <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="currentColor"><path d="M21.71 11.29l-9-9c-.39-.39-1.02-.39-1.41 0l-9 9c-.39.39-.39 1.02 0 1.41l9 9c.39.39 1.02.39 1.41 0l9-9c.39-.38.39-1.01 0-1.41zM14 14.5V12h-4v3H8v-4c0-.55.45-1 1-1h5V7.5l3.5 3.5-3.5 3.5z"/></svg>Directions
+          </a>` : ''}
+        </div>
+      </div>
+    `;
+    item.addEventListener('click', e => { if (e.target.closest('a')) return; e.stopPropagation(); flyToLocation(dIdx, lIdx); });
+    card.appendChild(item);
+  });
+
+  if (day.stay) {
+    const stay = document.createElement('p');
+    stay.className = 'text-[10px] text-stone-400 mt-2.5 ml-1 flex items-center gap-1 font-medium';
+    stay.innerHTML = `<span>🏨</span> ${day.stay}`;
+    card.appendChild(stay);
+  }
+
+  card.addEventListener('click', e => { if (e.target.closest('a')) return; flyToDay(dIdx); });
+  timelineContainer.appendChild(card);
+});
+
+/* ═══════════════════════════════════════════════════════════
+   LEAFLET MAP
+═══════════════════════════════════════════════════════════ */
+const map = L.map('map', { center:[22.2, 71.5], zoom:7, zoomControl:false });
+L.control.zoom({ position:'topright' }).addTo(map);
+
+const defaultLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+  attribution: '&copy; <a href="https://maps.google.com">Google Maps</a>', maxZoom: 20
+});
+const satelliteLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+  attribution: '&copy; <a href="https://maps.google.com">Google Maps</a>', maxZoom: 20
+});
+const terrainLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
+  attribution: '&copy; <a href="https://maps.google.com">Google Maps</a>', maxZoom: 20
+});
+defaultLayer.addTo(map);
+L.control.layers({'🗺️ Google Maps':defaultLayer, '🛰️ Google Satellite':satelliteLayer, '⛰️ Google Terrain':terrainLayer}, null, { position:'topright', collapsed:true }).addTo(map);
+
+// Marker icon
+function mkIcon(color, num) {
+  return L.divIcon({
+    className:'custom-marker', iconSize:[36,44], iconAnchor:[18,44], popupAnchor:[0,-46],
+    html:`<div class="marker-pin" style="background:${color}"><span>${num}</span></div>`
+  });
+}
+function currentIcon() {
+  return L.divIcon({
+    className:'', iconSize:[28,28], iconAnchor:[14,14],
+    html:`<div class="realtime-dot" style="position:relative;width:28px;height:28px"><div style="position:absolute;inset:0;border-radius:50%;background:#10b981;opacity:.25" class="marker-pulse"></div><div style="position:absolute;inset:5px;border-radius:50%;background:#10b981;border:2.5px solid #6ee7b7;box-shadow:0 0 14px rgba(16,185,129,.6)"></div></div>`
+  });
+}
+
+// Build popup HTML
+function buildPopup(day, loc) {
+  const img = loc.image
+    ? `<div class="popup-img-container"><img src="${loc.image}" alt="${loc.name}" loading="lazy" onclick="openModal('${loc.image}','${loc.name.replace(/'/g,"\\'")}','${loc.desc.replace(/'/g,"\\'")}')"><div style="position:absolute;top:8px;left:8px;background:${day.color};color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px">${day.day}</div></div>`
+    : `<div class="popup-img-placeholder" style="background:linear-gradient(135deg,${day.color}22,${day.color}55)">${loc.emoji}</div>`;
+
+  return `${img}
+  <div style="padding:12px 14px 14px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <span style="font-size:18px">${loc.emoji}</span>
+      <div>
+        <strong style="font-size:14px;color:${day.color};font-family:'Outfit',sans-serif;font-weight:700">${loc.name}</strong>
+        <div style="font-size:10px;color:#78716c;margin-top:1px">${day.day} • ${day.date.replace(', 2026','')} ${loc.time ? '• '+loc.time : ''}</div>
+      </div>
+    </div>
+    <p style="color:#44403c;font-size:12px;line-height:1.6;margin:0 0 6px">${loc.info||loc.desc}</p>
+    ${loc.tips ? `<div style="background:#fffbeb;border:1px solid #fef3c7;border-radius:8px;padding:7px 10px;margin-bottom:8px"><p style="color:#92400e;font-size:11px;line-height:1.5;margin:0;font-weight:500">${loc.tips}</p></div>` : ''}
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      ${loc.gmapUrl ? `<a href="${loc.gmapUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:5px 11px;border-radius:8px;background:#eff6ff;color:#2563eb;font-size:11px;font-weight:600;text-decoration:none;border:1px solid #dbeafe">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>Google Maps
+      </a>` : ''}
+      ${loc.directionsUrl ? `<a href="${loc.directionsUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:5px 11px;border-radius:8px;background:#ecfdf5;color:#059669;font-size:11px;font-weight:600;text-decoration:none;border:1px solid #d1fae5">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M21.71 11.29l-9-9c-.39-.39-1.02-.39-1.41 0l-9 9c-.39.39-.39 1.02 0 1.41l9 9c.39.39 1.02.39 1.41 0l9-9c.39-.38.39-1.01 0-1.41zM14 14.5V12h-4v3H8v-4c0-.55.45-1 1-1h5V7.5l3.5 3.5-3.5 3.5z"/></svg>Directions
+      </a>` : ''}
+    </div>
+  </div>`;
+}
+
+// Place markers
+const allMarkers = [];
+const allCoords = [];
+let gIdx = 0;
+
+TRIP_DATA.forEach((day, dIdx) => {
+  day.locations.forEach((loc, lIdx) => {
+    const marker = L.marker([loc.lat, loc.lng], { icon: mkIcon(day.color, gIdx+1) }).addTo(map);
+    marker.bindPopup(buildPopup(day, loc), { maxWidth:340, minWidth:300 });
+    allMarkers.push({ marker, dayIdx:dIdx, locIdx:lIdx });
+    allCoords.push([loc.lat, loc.lng]);
+    gIdx++;
+  });
+});
+
+// Route lines with segment popups
+const progress = getTripProgress();
+let completedCoords = [], upcomingCoords = [], passedCurrent = false;
+const currentDayIdx = getCurrentDayIndex();
+
+TRIP_DATA.forEach((day, dIdx) => {
+  day.locations.forEach(loc => {
+    const coord = [loc.lat, loc.lng];
+    if (!passedCurrent) {
+      completedCoords.push(coord);
+      if (dIdx >= currentDayIdx && !isCompleted(dIdx)) { passedCurrent = true; upcomingCoords.push(coord); }
+    } else { upcomingCoords.push(coord); }
+  });
+});
+
+if (completedCoords.length <= 1 && progress === 0) { upcomingCoords = allCoords; completedCoords = []; }
+
+function addSegmentClick(line, fromCoord, toCoord, fromName, toName, dayColor) {
+  const dt = TripAI.getDriveTime(
+    { lat: fromCoord[0], lng: fromCoord[1] },
+    { lat: toCoord[0], lng: toCoord[1] },
+    9
+  );
+  line.on('click', e => {
+    const popup = document.getElementById('segment-popup');
+    const title = document.getElementById('seg-title');
+    const body  = document.getElementById('seg-body');
+    title.textContent = `${fromName.split(' ')[0]} → ${toName.split(' ')[0]}`;
+    title.style.color = dayColor;
+    body.innerHTML = `
+      <div class="flex items-center gap-2"><span>📍</span><span class="text-stone-600"><b>${fromName}</b> → <b>${toName}</b></span></div>
+      <div class="flex items-center gap-2"><span>📏</span><span class="text-stone-600">Road distance: <b>~${dt.roadDist} km</b></span></div>
+      <div class="flex items-center gap-2"><span>🕐</span><span class="text-stone-600">Drive time: <b>~${TripAI.fmtMins(dt.minutes)}</b></span></div>
+      <div class="flex items-center gap-2"><span>🚦</span><span class="traffic-badge ${dt.level.cls}">${dt.level.label}</span></div>
+      <div class="flex items-center gap-2"><span>🌧️</span><span class="text-stone-500 text-[10px]">August monsoon (+30%) included in estimate</span></div>
+    `;
+    popup.style.left = Math.min(e.originalEvent.clientX + 12, window.innerWidth - 280) + 'px';
+    popup.style.top  = Math.min(e.originalEvent.clientY - 20, window.innerHeight - 240) + 'px';
+    popup.classList.remove('hidden');
+  });
+}
+
+// Draw route + segment popups
+for (let i = 0; i < allCoords.length - 1; i++) {
+  const fromLoc = (() => { let c=0; for(const d of TRIP_DATA) for(const l of d.locations) { if(c===i) return l; c++; } })();
+  const toLoc   = (() => { let c=0; for(const d of TRIP_DATA) for(const l of d.locations) { if(c===i+1) return l; c++; } })();
+  const fromDay = (() => { let c=0; for(const d of TRIP_DATA) for(const l of d.locations) { if(c===i) return d; c++; } })();
+
+  const isComp = completedCoords.length > 1 && i < completedCoords.length - 1;
+  const segLine = L.polyline(
+    [allCoords[i], allCoords[i+1]],
+    isComp
+      ? { color:'#f97316', weight:4, opacity:.9, smoothFactor:1.5 }
+      : { color:'#a8a29e', weight:3, opacity:.5, dashArray:'10,14', smoothFactor:1.5 }
+  ).addTo(map);
+
+  if (fromLoc && toLoc) addSegmentClick(segLine, allCoords[i], allCoords[i+1], fromLoc.name, toLoc.name, fromDay?.color || '#f97316');
+}
+
+// Current position dot
+if (progress > 0 && progress < 100) {
+  const total = allCoords.length;
+  const exact = (progress/100) * (total-1);
+  const lo = Math.floor(exact), hi = Math.min(lo+1, total-1);
+  const frac = exact - lo;
+  const curLat = allCoords[lo][0] + frac*(allCoords[hi][0]-allCoords[lo][0]);
+  const curLng = allCoords[lo][1] + frac*(allCoords[hi][1]-allCoords[lo][1]);
+  L.marker([curLat, curLng], { icon: currentIcon(), zIndexOffset:1000 }).addTo(map);
+}
+
+// Animated route draw if pre-trip
+if (progress === 0) {
+  const animLine = L.polyline([], { color:'#f97316', weight:3, opacity:.6 }).addTo(map);
+  let step = 0;
+  const iv = setInterval(() => {
+    if (step >= allCoords.length) { clearInterval(iv); map.removeLayer(animLine); return; }
+    animLine.addLatLng(allCoords[step++]);
+  }, 140);
+}
+
+// Realtime status card
+const rtCard = document.getElementById('rt-card');
+if (progress > 0 && progress < 100) {
+  rtCard.classList.remove('hidden');
+  document.getElementById('rt-status').textContent = `Trip ${progress}% complete — Day ${getCurrentDayIndex()+1} in progress!`;
+} else if (progress >= 100) {
+  rtCard.classList.remove('hidden');
+  document.getElementById('rt-status').textContent = '🎉 Trip completed! What an incredible Gujarat Darshan!';
+}
+
+// Fit map
+if (allCoords.length > 0) map.fitBounds(L.latLngBounds(allCoords).pad(0.12));
+
+// Map marker click → highlight timeline
+allMarkers.forEach(({ marker, dayIdx, locIdx }) => {
+  marker.on('click', () => {
+    document.querySelectorAll('.day-card').forEach(c => c.classList.remove('active'));
+    const card = document.querySelector(`.day-card[data-day-index="${dayIdx}"]`);
+    if (card) { card.classList.add('active'); card.scrollIntoView({ behavior:'smooth', block:'center' }); }
+    document.querySelectorAll('.activity-item').forEach(a => a.classList.remove('active-activity'));
+    const ai = document.querySelector(`.activity-item[data-day-index="${dayIdx}"][data-loc-index="${locIdx}"]`);
+    if (ai) ai.classList.add('active-activity');
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════
+   MAP INTERACTIONS
+═══════════════════════════════════════════════════════════ */
+function flyToDay(dIdx) {
+  const locs = TRIP_DATA[dIdx].locations;
+  const coords = locs.map(l => [l.lat, l.lng]);
+  if (coords.length === 1) map.flyTo(coords[0], 13, { duration:1.2 });
+  else map.flyToBounds(L.latLngBounds(coords).pad(0.3), { duration:1.2 });
+  document.querySelectorAll('.day-card').forEach(c => c.classList.remove('active'));
+  const c = document.querySelector(`.day-card[data-day-index="${dIdx}"]`);
+  if (c) { c.classList.add('active'); c.scrollIntoView({ behavior:'smooth', block:'center' }); }
+  document.querySelectorAll('.activity-item').forEach(a => a.classList.remove('active-activity'));
+}
+
+function flyToLocation(dIdx, lIdx) {
+  const loc = TRIP_DATA[dIdx].locations[lIdx];
+  const targetZoom = 14;
+  const point = map.project([loc.lat, loc.lng], targetZoom);
+  point.y -= 160; // Offset marker downwards by 160px so the popup is centered
+  const offsetLatLng = map.unproject(point, targetZoom);
+  
+  map.flyTo(offsetLatLng, targetZoom, { duration:1.2 });
+  const found = allMarkers.find(m => m.dayIdx===dIdx && m.locIdx===lIdx);
+  if (found) found.marker.openPopup();
+  document.querySelectorAll('.day-card').forEach(c => c.classList.remove('active'));
+  const c = document.querySelector(`.day-card[data-day-index="${dIdx}"]`);
+  if (c) c.classList.add('active');
+  document.querySelectorAll('.activity-item').forEach(a => a.classList.remove('active-activity'));
+  const ai = document.querySelector(`.activity-item[data-day-index="${dIdx}"][data-loc-index="${lIdx}"]`);
+  if (ai) ai.classList.add('active-activity');
+}
+
+document.getElementById('locate-btn').addEventListener('click', () => {
+  if (allCoords.length > 0) map.flyToBounds(L.latLngBounds(allCoords).pad(0.12), { duration:1 });
+});
+
+/* ═══════════════════════════════════════════════════════════
+   STATS PANEL
+═══════════════════════════════════════════════════════════ */
+const statsPanel = document.getElementById('stats-panel');
+document.getElementById('stats-btn').addEventListener('click', () => statsPanel.classList.toggle('open'));
+document.getElementById('stats-close').addEventListener('click', () => statsPanel.classList.remove('open'));
+
+// Populate stats
+const tripStats = TripAI.getTripStats();
+document.getElementById('stat-distance').textContent = `~${tripStats.totalDist} km`;
+document.getElementById('stat-drive').textContent = `~${TripAI.fmtMins(tripStats.totalDrive)}`;
+
+// Dynamic stops & km in overview card
+const totalStops = TRIP_DATA.reduce((acc, d) => acc + d.locations.length, 0);
+document.getElementById('header-stops').textContent = totalStops;
+document.getElementById('header-km').textContent = `~${tripStats.totalDist}`;
+document.getElementById('stat-places').textContent = totalStops;
+
+const breakdown = document.getElementById('stat-day-breakdown');
+TRIP_DATA.forEach((day, i) => {
+  const a = TripAI.analyzeDay(i);
+  if (a.totalDrive === 0) return;
+  const row = document.createElement('div');
+  row.className = 'flex items-center gap-2';
+  row.innerHTML = `<span class="text-base shrink-0">${day.icon}</span>
+    <span class="text-stone-600 font-medium text-xs w-16 shrink-0">${day.day}</span>
+    <div class="flex-1 bg-stone-100 rounded-full h-2 overflow-hidden">
+      <div style="width:${Math.min(100, a.totalDrive/10)}%;background:${day.color}" class="h-full rounded-full transition-all duration-1000"></div>
+    </div>
+    <span class="text-xs text-stone-500 font-semibold shrink-0 w-16 text-right">~${TripAI.fmtMins(a.totalDrive)}</span>
+    ${a.warnings.length ? '<span class="text-[9px] text-red-500 font-bold shrink-0">⚠️</span>' : ''}`;
+  breakdown.appendChild(row);
+});
+
+/* ═══════════════════════════════════════════════════════════
+   IMAGE MODAL
+═══════════════════════════════════════════════════════════ */
+window.openModal = function(src, title, desc) {
+  document.getElementById('modal-img').src = src;
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-desc').textContent = desc;
+  document.getElementById('img-modal').style.display = 'flex';
+};
+document.getElementById('modal-close').addEventListener('click', () => document.getElementById('img-modal').style.display = 'none');
+document.getElementById('img-modal').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.style.display = 'none'; });
+
+/* ═══════════════════════════════════════════════════════════
+   SEGMENT POPUP CLOSE
+═══════════════════════════════════════════════════════════ */
+document.getElementById('seg-close').addEventListener('click', () => document.getElementById('segment-popup').classList.add('hidden'));
+map.on('click', () => document.getElementById('segment-popup').classList.add('hidden'));
+
+/* ═══════════════════════════════════════════════════════════
+   SHARE + PROGRESS
+═══════════════════════════════════════════════════════════ */
+document.getElementById('copy-link-btn').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(window.location.href); }
+  catch { const t = document.createElement('textarea'); t.value = window.location.href; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t); }
+  showToast('Link copied to clipboard! 🎉');
+});
+
+function updateProgress() {
+  const p = getTripProgress();
+  document.getElementById('progress-bar').style.width = p + '%';
+  document.getElementById('progress-pct').textContent = p + '%';
+}
+updateProgress();
+setInterval(updateProgress, 60000);
+
+/* ═══════════════════════════════════════════════════════════
+   KEYBOARD SHORTCUTS
+═══════════════════════════════════════════════════════════ */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (document.getElementById('img-modal').style.display === 'flex') { document.getElementById('img-modal').style.display = 'none'; return; }
+    if (aiPanel.classList.contains('open')) { closeAI(); return; }
+    if (statsPanel.classList.contains('open')) { statsPanel.classList.remove('open'); return; }
+    document.getElementById('segment-popup').classList.add('hidden');
+    if (allCoords.length > 0) map.flyToBounds(L.latLngBounds(allCoords).pad(0.12), { duration:1 });
+  }
+  if (e.key === 'a' && e.ctrlKey) { e.preventDefault(); openAI(); }
+});
+
+})();
+</script>
+</body>
+</html>
