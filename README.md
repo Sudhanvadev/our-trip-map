@@ -1,4 +1,4 @@
-# 🛕 Gujarat Darshan 2026 — AI-Powered Trip Map
+# 🛕 Gujarat Darshan 2026 — Trip Map
 
 An interactive, AI-powered web app for our group trip to Gujarat — **August 22–28, 2026**.  
 Built with HTML, Tailwind CSS, Leaflet.js, and a custom AI Traffic Engine.
