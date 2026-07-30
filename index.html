@@ -247,6 +247,11 @@
       box-shadow: 0 4px 24px rgba(0,0,0,0.1);
       font-size: 11px;
     }
+    @media (max-width: 1023px) {
+      .map-legend.is-hidden {
+        display: none;
+      }
+    }
 
     /* ── Popup buttons ────────────────────────────── */
     .popup-link-btn {
@@ -1265,6 +1270,18 @@ TRIP_DATA.forEach((day, dIdx) => {
 ═══════════════════════════════════════════════════════════ */
 const map = L.map('map', { center:[22.2, 71.5], zoom:7, zoomControl:false });
 L.control.zoom({ position:'topright' }).addTo(map);
+
+const mapLegend = document.querySelector('.map-legend');
+function syncLegendVisibility() {
+  if (!mapLegend) return;
+  const isMobile = window.matchMedia('(max-width: 1023px)').matches;
+  const popupOpen = !!(map._popup && map._popup.isOpen && map._popup.isOpen());
+  mapLegend.classList.toggle('is-hidden', isMobile && popupOpen);
+}
+map.on('popupopen', syncLegendVisibility);
+map.on('popupclose', syncLegendVisibility);
+window.addEventListener('resize', syncLegendVisibility);
+syncLegendVisibility();
 
 const defaultLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
   attribution: '&copy; <a href="https://maps.google.com">Google Maps</a>', maxZoom: 20
