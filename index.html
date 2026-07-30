@@ -33,8 +33,49 @@
       --glass: rgba(255,255,255,0.72);
       --glass-border: rgba(255,153,51,0.15);
       --shadow-warm: 0 8px 32px rgba(255,153,51,0.12);
+      --page-bg: #F8FAFC;
+      --page-text: #1c1917;
+      --page-muted: #78716c;
+      --panel-bg: rgba(255,255,255,0.92);
+      --panel-alt: linear-gradient(180deg, #FFFDF8 0%, #FFF8EE 40%, #F8F4EF 100%);
+      --hero-bg: linear-gradient(135deg, #fff 0%, #FFF9F0 60%, #FFF3E0 100%);
+      --surface-bg: rgba(255,255,255,0.9);
+      --surface-strong: #ffffff;
+      --border-soft: rgba(255,153,51,0.18);
+      --map-bg: #f0f4f8;
+      --legend-bg: rgba(255,255,255,0.92);
+      --popup-bg: #ffffff;
+      --popup-text: #1c1917;
+      --popup-muted: #78716c;
+    }
+    [data-theme="dark"] {
+      color-scheme: dark;
+      --page-bg: #020617;
+      --page-text: #f8fafc;
+      --page-muted: #94a3b8;
+      --panel-bg: rgba(15,23,42,0.9);
+      --panel-alt: linear-gradient(180deg, #111827 0%, #0f172a 45%, #020617 100%);
+      --hero-bg: linear-gradient(135deg, rgba(15,23,42,0.96), rgba(30,41,59,0.94));
+      --surface-bg: rgba(15,23,42,0.82);
+      --surface-strong: #0f172a;
+      --border-soft: rgba(255,153,51,0.22);
+      --map-bg: #020617;
+      --legend-bg: rgba(15,23,42,0.94);
+      --popup-bg: #0f172a;
+      --popup-text: #f8fafc;
+      --popup-muted: #cbd5e1;
     }
     *{box-sizing:border-box}
+    body {
+      background: var(--page-bg);
+      color: var(--page-text);
+      transition: background .25s ease, color .25s ease;
+    }
+    body[data-theme="dark"] .text-stone-400{color:var(--page-muted)!important}
+    body[data-theme="dark"] .text-stone-500{color:#cbd5e1!important}
+    body[data-theme="dark"] .text-stone-600{color:#e2e8f0!important}
+    body[data-theme="dark"] .text-stone-700{color:#f8fafc!important}
+    body[data-theme="dark"] .text-stone-800{color:#f8fafc!important}
     ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,153,51,0.35);border-radius:999px}::-webkit-scrollbar-thumb:hover{background:rgba(255,153,51,0.6)}
 
     /* ── Gradient texts ───────────────────────────── */
@@ -45,10 +86,10 @@
 
     /* ── Header ───────────────────────────────────── */
     #app-header {
-      background: rgba(255,255,255,0.92);
+      background: var(--panel-bg);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid rgba(255,153,51,0.18);
+      border-bottom: 1px solid var(--border-soft);
       box-shadow: 0 2px 24px rgba(255,153,51,0.07);
     }
     .header-logo-ring {
@@ -62,15 +103,15 @@
 
     /* ── Sidebar ──────────────────────────────────── */
     #sidebar {
-      background: linear-gradient(180deg, #FFFDF8 0%, #FFF8EE 40%, #F8F4EF 100%);
+      background: var(--panel-alt);
       border-right: 1px solid rgba(255,153,51,0.12);
     }
 
     /* ── Hero overview card ───────────────────────── */
     .hero-card {
-      background: linear-gradient(135deg, #fff 0%, #FFF9F0 60%, #FFF3E0 100%);
+      background: var(--hero-bg);
       border: 1px solid rgba(255,153,51,0.2);
-      box-shadow: 0 4px 24px rgba(255,153,51,0.1), 0 1px 0 rgba(255,255,255,0.8) inset;
+      box-shadow: 0 4px 24px rgba(255,153,51,0.1), 0 1px 0 rgba(255,255,255,0.08) inset;
       border-radius: 20px;
       position: relative;
       overflow: hidden;
@@ -94,7 +135,7 @@
 
     /* ── Stat mini cards ──────────────────────────── */
     .stat-mini {
-      background: rgba(255,255,255,0.9);
+      background: var(--surface-bg);
       border: 1px solid rgba(255,153,51,0.14);
       border-radius: 14px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.04);
@@ -107,6 +148,10 @@
       background: linear-gradient(135deg, rgba(255,153,51,0.08), rgba(19,136,8,0.06));
       border: 1px solid rgba(255,153,51,0.2);
       border-radius: 16px;
+    }
+    body[data-theme="dark"] #countdown-box {
+      background: linear-gradient(135deg, rgba(255,153,51,0.16), rgba(19,136,8,0.12));
+      border-color: rgba(255,153,51,0.24);
     }
     .countdown-chip {
       background: rgba(255,255,255,0.85);
@@ -141,6 +186,11 @@
       background: linear-gradient(90deg, rgba(255,153,51,0.1), rgba(255,153,51,0.03));
       border-left-color: var(--kesari);
       box-shadow: 0 4px 20px rgba(255,153,51,0.12);
+    }
+    body[data-theme="dark"] .day-card:hover,
+    body[data-theme="dark"] .day-card.active {
+      background: linear-gradient(90deg, rgba(255,153,51,0.16), rgba(15,23,42,0.04));
+      box-shadow: 0 4px 20px rgba(2,6,23,0.28);
     }
 
     /* ── Activity items ───────────────────────────── */
@@ -179,6 +229,7 @@
       border-radius: 20px;
       overflow: hidden;
       box-shadow: 0 8px 40px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,153,51,0.1);
+      background: var(--map-bg);
     }
     #map { width: 100%; height: 100%; }
 
@@ -187,7 +238,7 @@
       position: absolute;
       bottom: 28px; left: 28px;
       z-index: 500;
-      background: rgba(255,255,255,0.92);
+      background: var(--legend-bg);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(255,153,51,0.18);
@@ -208,11 +259,13 @@
     .popup-link-btn:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.12); }
 
     /* ── Leaflet popup ────────────────────────────── */
-    .leaflet-popup-content-wrapper{background:#fff!important;color:#1c1917!important;border-radius:20px!important;box-shadow:0 16px 48px rgba(0,0,0,.16),0 0 0 1px rgba(255,153,51,.1)!important;padding:0!important;overflow:hidden!important}
-    .leaflet-popup-tip{background:#fff!important}
-    .leaflet-popup-close-button{color:#78716c!important;font-size:22px!important;top:8px!important;right:10px!important;z-index:10!important}
+    .leaflet-popup-content-wrapper{background:var(--popup-bg)!important;color:var(--popup-text)!important;border-radius:20px!important;box-shadow:0 16px 48px rgba(0,0,0,.16),0 0 0 1px rgba(255,153,51,.1)!important;padding:0!important;overflow:hidden!important}
+    .leaflet-popup-tip{background:var(--popup-bg)!important}
+    .leaflet-popup-close-button{color:var(--popup-muted)!important;font-size:22px!important;top:8px!important;right:10px!important;z-index:10!important}
     .leaflet-popup-content{margin:0!important;font-family:'Inter',sans-serif!important;width:320px!important}
-    .leaflet-control-layers{border-radius:14px!important;border:1px solid rgba(255,153,51,0.2)!important;box-shadow:0 4px 20px rgba(0,0,0,.1)!important;font-family:'Inter',sans-serif!important;padding:8px 12px!important;background:rgba(255,255,255,0.95)!important;backdrop-filter:blur(12px)!important}
+    .leaflet-control-layers{border-radius:14px!important;border:1px solid rgba(255,153,51,0.2)!important;box-shadow:0 4px 20px rgba(0,0,0,.1)!important;font-family:'Inter',sans-serif!important;padding:8px 12px!important;background:var(--legend-bg)!important;backdrop-filter:blur(12px)!important}
+    .leaflet-container{background:var(--map-bg)!important}
+    .leaflet-control-attribution{background:rgba(2,6,23,0.75)!important;color:#cbd5e1!important}
 
     /* ── Custom markers ───────────────────────────── */
     .custom-marker{display:flex;align-items:center;justify-content:center;position:relative}
@@ -230,12 +283,13 @@
       position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);
       transition:transform .35s cubic-bezier(.4,0,.2,1);
       z-index:1500;
-      background:rgba(255,255,255,0.97);
+      background:var(--surface-strong);
       backdrop-filter:blur(20px);
       border-radius:24px 24px 0 0;
       box-shadow:0 -12px 48px rgba(0,0,0,.12), 0 0 0 1px rgba(255,153,51,0.1);
       max-width:600px;width:100%
     }
+    body[data-theme="dark"] #stats-panel { background: rgba(15,23,42,0.96); }
     #stats-panel.open{transform:translateX(-50%) translateY(0)}
     .stats-handle {
       width: 36px; height: 4px;
@@ -309,7 +363,7 @@
 
     /* ── Toast ────────────────────────────────────── */
     #toast > div {
-      background: rgba(255,255,255,0.96);
+      background: var(--surface-strong);
       border: 1px solid rgba(19,136,8,0.2);
       border-radius: 16px;
       box-shadow: 0 8px 32px rgba(0,0,0,.14);
@@ -363,6 +417,9 @@
 
     <!-- Right: Action Buttons -->
     <div class="flex items-center gap-1.5 shrink-0">
+      <button id="theme-toggle" type="button" title="Toggle dark mode" class="btn-icon p-2" aria-pressed="false">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2m0 14v2m9-9h-2M5 12H3m9-6.5l-1.4-1.4m8.8 8.8l-1.4-1.4M7.4 16.6l-1.4 1.4m8.8-8.8l-1.4 1.4M12 8a4 4 0 100 8 4 4 0 000-8z"/></svg>
+      </button>
       <button id="stats-btn" title="Trip Stats" class="btn-icon p-2">
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
       </button>
@@ -1176,8 +1233,11 @@ TRIP_DATA.forEach((day, dIdx) => {
 const map = L.map('map', { center:[22.2, 71.5], zoom:7, zoomControl:false });
 L.control.zoom({ position:'topright' }).addTo(map);
 
-const defaultLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
-  attribution: '&copy; <a href="https://maps.google.com">Google Maps</a>', maxZoom: 20
+const standardLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>', maxZoom: 20
+});
+const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a>', maxZoom: 20
 });
 const satelliteLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
   attribution: '&copy; <a href="https://maps.google.com">Google Maps</a>', maxZoom: 20
@@ -1185,8 +1245,36 @@ const satelliteLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}
 const terrainLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
   attribution: '&copy; <a href="https://maps.google.com">Google Maps</a>', maxZoom: 20
 });
-defaultLayer.addTo(map);
-L.control.layers({'🗺️ Google Maps':defaultLayer, '🛰️ Google Satellite':satelliteLayer, '⛰️ Google Terrain':terrainLayer}, null, { position:'topright', collapsed:true }).addTo(map);
+standardLayer.addTo(map);
+L.control.layers({'🗺️ Standard':standardLayer, '🌙 Dark':darkLayer, '🛰️ Satellite':satelliteLayer, '⛰️ Terrain':terrainLayer}, null, { position:'topright', collapsed:true }).addTo(map);
+
+const themeToggle = document.getElementById('theme-toggle');
+function applyTheme(theme) {
+  const isDark = theme === 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+  document.body.setAttribute('data-theme', theme);
+  localStorage.setItem('trip-theme', theme);
+  if (themeToggle) {
+    themeToggle.setAttribute('aria-pressed', String(isDark));
+    themeToggle.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+    themeToggle.innerHTML = isDark
+      ? '<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>'
+      : '<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2m0 14v2m9-9h-2M5 12H3m9-6.5l-1.4-1.4m8.8 8.8l-1.4-1.4M7.4 16.6l-1.4 1.4m8.8-8.8l-1.4 1.4M12 8a4 4 0 100 8 4 4 0 000-8z"/></svg>';
+  }
+  if (isDark) {
+    if (map.hasLayer(standardLayer)) map.removeLayer(standardLayer);
+    if (!map.hasLayer(darkLayer)) darkLayer.addTo(map);
+  } else {
+    if (map.hasLayer(darkLayer)) map.removeLayer(darkLayer);
+    if (!map.hasLayer(standardLayer)) standardLayer.addTo(map);
+  }
+}
+const savedTheme = localStorage.getItem('trip-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+applyTheme(savedTheme);
+themeToggle?.addEventListener('click', () => {
+  const nextTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  applyTheme(nextTheme);
+});
 
 // Marker icon
 function mkIcon(color, num) {
