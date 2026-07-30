@@ -1268,15 +1268,30 @@ TRIP_DATA.forEach((day, dIdx) => {
 /* ═══════════════════════════════════════════════════════════
    LEAFLET MAP
 ═══════════════════════════════════════════════════════════ */
-const map = L.map('map', { center:[22.2, 71.5], zoom:7, zoomControl:false });
+const map = L.map('map', {
+  center:[22.2, 71.5],
+  zoom:7,
+  zoomControl:false,
+  preferCanvas:true,
+  zoomAnimation:true,
+  fadeAnimation:false,
+  markerZoomAnimation:false,
+  inertia:true,
+  inertiaDeceleration:3000
+});
 L.control.zoom({ position:'topright' }).addTo(map);
+map.whenReady(() => {
+  setTimeout(() => map.invalidateSize(), 120);
+});
 
 const mapLegend = document.querySelector('.map-legend');
+function isMobileView() {
+  return window.matchMedia('(max-width: 1023px)').matches;
+}
 function syncLegendVisibility() {
   if (!mapLegend) return;
-  const isMobile = window.matchMedia('(max-width: 1023px)').matches;
   const popupOpen = !!(map._popup && map._popup.isOpen && map._popup.isOpen());
-  mapLegend.classList.toggle('is-hidden', isMobile && popupOpen);
+  mapLegend.classList.toggle('is-hidden', isMobileView() && popupOpen);
 }
 map.on('popupopen', syncLegendVisibility);
 map.on('popupclose', syncLegendVisibility);
@@ -1373,118 +1388,127 @@ const allMarkers = [];
 const allCoords = [];
 let gIdx = 0;
 
-TRIP_DATA.forEach((day, dIdx) => {
-  day.locations.forEach((loc, lIdx) => {
-    const marker = L.marker([loc.lat, loc.lng], { icon: mkIcon(day.color, gIdx+1) }).addTo(map);
-    marker.bindPopup(buildPopup(day, loc), { maxWidth:340, minWidth:300 });
-    allMarkers.push({ marker, dayIdx:dIdx, locIdx:lIdx });
-    allCoords.push([loc.lat, loc.lng]);
-    gIdx++;
+requestAnimationFrame(() => {
+  TRIP_DATA.forEach((day, dIdx) => {
+    day.locations.forEach((loc, lIdx) => {
+      const marker = L.marker([loc.lat, loc.lng], { icon: mkIcon(day.color, gIdx+1) }).addTo(map);
+      marker.bindPopup(buildPopup(day, loc), { maxWidth:340, minWidth:300 });
+      allMarkers.push({ marker, dayIdx:dIdx, locIdx:lIdx });
+      allCoords.push([loc.lat, loc.lng]);
+      gIdx++;
+    });
   });
-});
 
-// Route lines with segment popups
-const progress = getTripProgress();
-let completedCoords = [], upcomingCoords = [], passedCurrent = false;
-const currentDayIdx = getCurrentDayIndex();
+  // Route lines with segment popups
+  const progress = getTripProgress();
+  let completedCoords = [], upcomingCoords = [], passedCurrent = false;
+  const currentDayIdx = getCurrentDayIndex();
 
-TRIP_DATA.forEach((day, dIdx) => {
-  day.locations.forEach(loc => {
-    const coord = [loc.lat, loc.lng];
-    if (!passedCurrent) {
-      completedCoords.push(coord);
-      if (dIdx >= currentDayIdx && !isCompleted(dIdx)) { passedCurrent = true; upcomingCoords.push(coord); }
-    } else { upcomingCoords.push(coord); }
+  TRIP_DATA.forEach((day, dIdx) => {
+    day.locations.forEach(loc => {
+      const coord = [loc.lat, loc.lng];
+      if (!passedCurrent) {
+        completedCoords.push(coord);
+        if (dIdx >= currentDayIdx && !isCompleted(dIdx)) { passedCurrent = true; upcomingCoords.push(coord); }
+      } else { upcomingCoords.push(coord); }
+    });
   });
-});
 
-if (completedCoords.length <= 1 && progress === 0) { upcomingCoords = allCoords; completedCoords = []; }
+  if (completedCoords.length <= 1 && progress === 0) { upcomingCoords = allCoords; completedCoords = []; }
 
-function addSegmentClick(line, fromCoord, toCoord, fromName, toName, dayColor) {
-  const dt = TripAI.getDriveTime(
-    { lat: fromCoord[0], lng: fromCoord[1] },
-    { lat: toCoord[0], lng: toCoord[1] },
-    9
-  );
-  line.on('click', e => {
-    const popup = document.getElementById('segment-popup');
-    const title = document.getElementById('seg-title');
-    const body  = document.getElementById('seg-body');
-    title.textContent = `${fromName.split(' ')[0]} → ${toName.split(' ')[0]}`;
-    title.style.color = dayColor;
-    body.innerHTML = `
-      <div class="flex items-center gap-2"><span>📍</span><span class="text-stone-600"><b>${fromName}</b> → <b>${toName}</b></span></div>
-      <div class="flex items-center gap-2"><span>📏</span><span class="text-stone-600">Road distance: <b>~${dt.roadDist} km</b></span></div>
-      <div class="flex items-center gap-2"><span>🕐</span><span class="text-stone-600">Drive time: <b>~${TripAI.fmtMins(dt.minutes)}</b></span></div>
-      <div class="flex items-center gap-2"><span>🚦</span><span class="traffic-badge ${dt.level.cls}">${dt.level.label}</span></div>
-      <div class="flex items-center gap-2"><span>🌧️</span><span class="text-stone-500 text-[10px]">August monsoon (+30%) included in estimate</span></div>
-    `;
-    popup.style.left = Math.min(e.originalEvent.clientX + 12, window.innerWidth - 280) + 'px';
-    popup.style.top  = Math.min(e.originalEvent.clientY - 20, window.innerHeight - 240) + 'px';
-    popup.classList.remove('hidden');
-  });
-}
+  function addSegmentClick(line, fromCoord, toCoord, fromName, toName, dayColor) {
+    const dt = TripAI.getDriveTime(
+      { lat: fromCoord[0], lng: fromCoord[1] },
+      { lat: toCoord[0], lng: toCoord[1] },
+      9
+    );
+    line.on('click', e => {
+      const popup = document.getElementById('segment-popup');
+      const title = document.getElementById('seg-title');
+      const body  = document.getElementById('seg-body');
+      title.textContent = `${fromName.split(' ')[0]} → ${toName.split(' ')[0]}`;
+      title.style.color = dayColor;
+      body.innerHTML = `
+        <div class="flex items-center gap-2"><span>📍</span><span class="text-stone-600"><b>${fromName}</b> → <b>${toName}</b></span></div>
+        <div class="flex items-center gap-2"><span>📏</span><span class="text-stone-600">Road distance: <b>~${dt.roadDist} km</b></span></div>
+        <div class="flex items-center gap-2"><span>🕐</span><span class="text-stone-600">Drive time: <b>~${TripAI.fmtMins(dt.minutes)}</b></span></div>
+        <div class="flex items-center gap-2"><span>🚦</span><span class="traffic-badge ${dt.level.cls}">${dt.level.label}</span></div>
+        <div class="flex items-center gap-2"><span>🌧️</span><span class="text-stone-500 text-[10px]">August monsoon (+30%) included in estimate</span></div>
+      `;
+      popup.style.left = Math.min(e.originalEvent.clientX + 12, window.innerWidth - 280) + 'px';
+      popup.style.top  = Math.min(e.originalEvent.clientY - 20, window.innerHeight - 240) + 'px';
+      popup.classList.remove('hidden');
+    });
+  }
 
-// Draw route + segment popups
-for (let i = 0; i < allCoords.length - 1; i++) {
-  const fromLoc = (() => { let c=0; for(const d of TRIP_DATA) for(const l of d.locations) { if(c===i) return l; c++; } })();
-  const toLoc   = (() => { let c=0; for(const d of TRIP_DATA) for(const l of d.locations) { if(c===i+1) return l; c++; } })();
-  const fromDay = (() => { let c=0; for(const d of TRIP_DATA) for(const l of d.locations) { if(c===i) return d; c++; } })();
+  // Draw route + segment popups
+  for (let i = 0; i < allCoords.length - 1; i++) {
+    const fromLoc = (() => { let c=0; for(const d of TRIP_DATA) for(const l of d.locations) { if(c===i) return l; c++; } })();
+    const toLoc   = (() => { let c=0; for(const d of TRIP_DATA) for(const l of d.locations) { if(c===i+1) return l; c++; } })();
+    const fromDay = (() => { let c=0; for(const d of TRIP_DATA) for(const l of d.locations) { if(c===i) return d; c++; } })();
 
-  const isComp = completedCoords.length > 1 && i < completedCoords.length - 1;
-  const segLine = L.polyline(
-    [allCoords[i], allCoords[i+1]],
-    isComp
-      ? { color:'#f97316', weight:4, opacity:.9, smoothFactor:1.5 }
-      : { color:'#a8a29e', weight:3, opacity:.5, dashArray:'10,14', smoothFactor:1.5 }
-  ).addTo(map);
+    const isComp = completedCoords.length > 1 && i < completedCoords.length - 1;
+    const segLine = L.polyline(
+      [allCoords[i], allCoords[i+1]],
+      isComp
+        ? { color:'#f97316', weight:4, opacity:.9, smoothFactor:1.5 }
+        : { color:'#a8a29e', weight:3, opacity:.5, dashArray:'10,14', smoothFactor:1.5 }
+    ).addTo(map);
 
-  if (fromLoc && toLoc) addSegmentClick(segLine, allCoords[i], allCoords[i+1], fromLoc.name, toLoc.name, fromDay?.color || '#f97316');
-}
+    if (fromLoc && toLoc) addSegmentClick(segLine, allCoords[i], allCoords[i+1], fromLoc.name, toLoc.name, fromDay?.color || '#f97316');
+  }
 
-// Current position dot
-if (progress > 0 && progress < 100) {
-  const total = allCoords.length;
-  const exact = (progress/100) * (total-1);
-  const lo = Math.floor(exact), hi = Math.min(lo+1, total-1);
-  const frac = exact - lo;
-  const curLat = allCoords[lo][0] + frac*(allCoords[hi][0]-allCoords[lo][0]);
-  const curLng = allCoords[lo][1] + frac*(allCoords[hi][1]-allCoords[lo][1]);
-  L.marker([curLat, curLng], { icon: currentIcon(), zIndexOffset:1000 }).addTo(map);
-}
+  // Current position dot
+  if (progress > 0 && progress < 100) {
+    const total = allCoords.length;
+    const exact = (progress/100) * (total-1);
+    const lo = Math.floor(exact), hi = Math.min(lo+1, total-1);
+    const frac = exact - lo;
+    const curLat = allCoords[lo][0] + frac*(allCoords[hi][0]-allCoords[lo][0]);
+    const curLng = allCoords[lo][1] + frac*(allCoords[hi][1]-allCoords[lo][1]);
+    L.marker([curLat, curLng], { icon: currentIcon(), zIndexOffset:1000 }).addTo(map);
+  }
 
-// Animated route draw if pre-trip
-if (progress === 0) {
-  const animLine = L.polyline([], { color:'#f97316', weight:3, opacity:.6 }).addTo(map);
-  let step = 0;
-  const iv = setInterval(() => {
-    if (step >= allCoords.length) { clearInterval(iv); map.removeLayer(animLine); return; }
-    animLine.addLatLng(allCoords[step++]);
-  }, 140);
-}
+  // Animated route draw if pre-trip
+  if (progress === 0) {
+    const animLine = L.polyline([], { color:'#f97316', weight:3, opacity:.6 }).addTo(map);
+    let step = 0;
+    const iv = setInterval(() => {
+      if (step >= allCoords.length) { clearInterval(iv); map.removeLayer(animLine); return; }
+      animLine.addLatLng(allCoords[step++]);
+    }, 140);
+  }
 
-// Realtime status card
-const rtCard = document.getElementById('rt-card');
-if (progress > 0 && progress < 100) {
-  rtCard.classList.remove('hidden');
-  document.getElementById('rt-status').textContent = `Trip ${progress}% complete — Day ${getCurrentDayIndex()+1} in progress!`;
-} else if (progress >= 100) {
-  rtCard.classList.remove('hidden');
-  document.getElementById('rt-status').textContent = '🎉 Trip completed! What an incredible Gujarat Darshan!';
-}
+  // Realtime status card
+  const rtCard = document.getElementById('rt-card');
+  if (progress > 0 && progress < 100) {
+    rtCard.classList.remove('hidden');
+    document.getElementById('rt-status').textContent = `Trip ${progress}% complete — Day ${getCurrentDayIndex()+1} in progress!`;
+  } else if (progress >= 100) {
+    rtCard.classList.remove('hidden');
+    document.getElementById('rt-status').textContent = '🎉 Trip completed! What an incredible Gujarat Darshan!';
+  }
 
-// Fit map
-if (allCoords.length > 0) map.fitBounds(L.latLngBounds(allCoords).pad(0.12));
+  // Fit map
+  if (allCoords.length > 0) {
+    setTimeout(() => {
+      map.fitBounds(L.latLngBounds(allCoords).pad(0.12));
+    }, 180);
+  }
 
-// Map marker click → highlight timeline
-allMarkers.forEach(({ marker, dayIdx, locIdx }) => {
-  marker.on('click', () => {
-    document.querySelectorAll('.day-card').forEach(c => c.classList.remove('active'));
-    const card = document.querySelector(`.day-card[data-day-index="${dayIdx}"]`);
-    if (card) { card.classList.add('active'); card.scrollIntoView({ behavior:'smooth', block:'center' }); }
-    document.querySelectorAll('.activity-item').forEach(a => a.classList.remove('active-activity'));
-    const ai = document.querySelector(`.activity-item[data-day-index="${dayIdx}"][data-loc-index="${locIdx}"]`);
-    if (ai) ai.classList.add('active-activity');
+  // Map marker click → highlight timeline on desktop, keep mobile focused on the map popup
+  allMarkers.forEach(({ marker, dayIdx, locIdx }) => {
+    marker.on('click', () => {
+      document.querySelectorAll('.day-card').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.activity-item').forEach(a => a.classList.remove('active-activity'));
+
+      if (!isMobileView()) {
+        const card = document.querySelector(`.day-card[data-day-index="${dayIdx}"]`);
+        if (card) { card.classList.add('active'); card.scrollIntoView({ behavior:'smooth', block:'center' }); }
+        const ai = document.querySelector(`.activity-item[data-day-index="${dayIdx}"][data-loc-index="${locIdx}"]`);
+        if (ai) ai.classList.add('active-activity');
+      }
+    });
   });
 });
 
