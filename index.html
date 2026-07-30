@@ -384,8 +384,27 @@
     }
 
     /* ── Responsive ───────────────────────────────── */
-    @media(max-width:1023px){#map-wrapper{inset:0;border-radius:0;box-shadow:none}}
-    @media(max-width:640px){#stats-panel{border-radius:20px 20px 0 0}}
+    @media(max-width:1023px){
+      #map-wrapper{inset:0;border-radius:0;box-shadow:none}
+      .map-legend{left:12px;bottom:12px;right:12px;padding:10px 12px}
+    }
+    @media(max-width:640px){
+      #stats-panel{border-radius:20px 20px 0 0}
+      #app-header{padding:0 2px}
+      #app-header .max-w-\[1800px\]{height:auto;min-height:60px;padding-top:8px;padding-bottom:8px}
+      #app-header .flex.items-center.justify-between{flex-wrap:wrap;gap:8px}
+      #app-header .min-w-0.shrink-0{width:100%}
+      #app-header .flex.items-center.gap-1\.5.shrink-0{width:100%;justify-content:flex-end}
+      .hero-card{padding:14px}
+      .gujarat-icon-strip{font-size:16px;gap:8px;flex-wrap:wrap}
+      .stat-mini{padding:10px}
+      .day-card{padding-left:10px;padding-right:8px}
+      .activity-item{padding:8px}
+      .map-legend{font-size:10px}
+      .map-legend .font-medium{font-size:10px!important}
+      .btn-icon{min-width:40px;height:40px}
+      .btn-primary{padding:8px 12px}
+    }
   </style>
 </head>
 
