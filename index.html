@@ -165,6 +165,37 @@
     @keyframes countdown-pulse{0%,100%{opacity:1}50%{opacity:.6}}
     .countdown-pulse{animation:countdown-pulse 1s ease-in-out infinite}
 
+    /* ── Weather widget ───────────────────────────── */
+    #weather-widget {
+      background: linear-gradient(135deg, rgba(14,165,233,0.12), rgba(255,153,51,0.07));
+      border: 1px solid rgba(255,255,255,0.55);
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(14,165,233,0.12), inset 0 1px 0 rgba(255,255,255,0.55);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+    .weather-day {
+      background: rgba(255,255,255,0.76);
+      border: 1px solid rgba(14,165,233,0.16);
+      border-radius: 14px;
+      padding: 8px;
+      transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    }
+    .weather-day:hover {
+      transform: translateY(-2px);
+      background: rgba(255,255,255,0.95);
+      border-color: rgba(14,165,233,0.3);
+      box-shadow: 0 8px 24px rgba(14,165,233,0.12);
+    }
+    body[data-theme="dark"] .weather-day {
+      background: rgba(15,23,42,0.72);
+      border-color: rgba(255,255,255,0.08);
+    }
+    body[data-theme="dark"] .weather-day:hover {
+      background: rgba(15,23,42,0.92);
+      border-color: rgba(14,165,233,0.35);
+    }
+
     /* ── Timeline ─────────────────────────────────── */
     .timeline-line{position:absolute;left:19px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,#FF9933,#ec4899,#8b5cf6,#0EA5E9,#138808);opacity:.2}
 
@@ -527,6 +558,19 @@
           <p class="text-[10px] font-bold uppercase tracking-wider mb-1.5" style="color:#B45309">⏳ Trip Countdown</p>
           <p id="countdown-text" class="text-stone-700 font-bold text-sm"></p>
           <div id="countdown-chips" class="flex gap-2 mt-2 flex-wrap"></div>
+        </div>
+
+        <!-- Gujarat Weather -->
+        <div id="weather-widget" class="mt-3 p-3">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <p class="text-[10px] font-bold uppercase tracking-wider" style="color:#0369a1">🌤️ Gujarat Weather</p>
+              <p id="weather-location" class="text-[11px] text-stone-500 font-medium mt-0.5">Present location: Ahmedabad, Gujarat</p>
+            </div>
+            <span id="weather-updated" class="text-[9px] text-stone-400 font-semibold">Syncing…</span>
+          </div>
+          <div id="weather-current" class="mt-2 rounded-2xl p-3" style="background:linear-gradient(135deg,rgba(255,255,255,0.78),rgba(224,242,254,0.64));border:1px solid rgba(14,165,233,0.12)">Loading live conditions…</div>
+          <div id="weather-hours" class="mt-2 grid grid-cols-3 gap-2"></div>
         </div>
 
         <!-- Mobile clock -->
@@ -1150,6 +1194,176 @@ function updateCountdown() {
 }
 updateCountdown();
 setInterval(updateCountdown, 1000);
+
+/* ═══════════════════════════════════════════════════════════
+   REAL-TIME GUJARAT WEATHER
+═══════════════════════════════════════════════════════════ */
+const FALLBACK_WEATHER = {
+  latitude: 23.2167,
+  longitude: 72.6833,
+  name: 'Ahmedabad, Gujarat'
+};
+
+let weatherLocation = { ...FALLBACK_WEATHER };
+
+function buildWeatherEndpoint(lat, lon) {
+  return `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m&hourly=temperature_2m,precipitation_probability,weather_code&timezone=auto&forecast_hours=12`;
+}
+
+function weatherCodeToText(code) {
+  if (code === 0) return 'Clear';
+  if ([1,2,3].includes(code)) return 'Partly cloudy';
+  if ([45,48].includes(code)) return 'Fog';
+  if ([51,53,55,56,57,61,63,65,66,67,80,81,82].includes(code)) return 'Rain';
+  if ([71,73,75,77,85,86].includes(code)) return 'Snow';
+  if ([95,96,99].includes(code)) return 'Storm';
+  if ([91,92,93].includes(code)) return 'Rain showers';
+  return 'Weather';
+}
+
+function weatherCodeToIcon(code) {
+  if (code === 0) return '☀️';
+  if ([1,2,3].includes(code)) return '⛅';
+  if ([45,48].includes(code)) return '🌫️';
+  if ([51,53,55,56,57,61,63,65,66,67,80,81,82,91,92,93].includes(code)) return '🌧️';
+  if ([71,73,75,77,85,86].includes(code)) return '❄️';
+  if ([95,96,99].includes(code)) return '⛈️';
+  return '🌤️';
+}
+
+function getWeatherAccent(code) {
+  if (code === 0) return 'linear-gradient(135deg, rgba(253,230,138,0.80), rgba(255,255,255,0.78))';
+  if ([1,2,3].includes(code)) return 'linear-gradient(135deg, rgba(186,230,253,0.85), rgba(255,255,255,0.78))';
+  if ([45,48].includes(code)) return 'linear-gradient(135deg, rgba(226,232,240,0.88), rgba(255,255,255,0.78))';
+  if ([51,53,55,56,57,61,63,65,66,67,80,81,82,91,92,93].includes(code)) return 'linear-gradient(135deg, rgba(191,219,254,0.88), rgba(224,242,254,0.78))';
+  if ([71,73,75,77,85,86].includes(code)) return 'linear-gradient(135deg, rgba(224,231,255,0.88), rgba(255,255,255,0.78))';
+  if ([95,96,99].includes(code)) return 'linear-gradient(135deg, rgba(253,214,186,0.88), rgba(255,255,255,0.78))';
+  return 'linear-gradient(135deg, rgba(224,242,254,0.85), rgba(255,255,255,0.78))';
+}
+
+function renderWeatherCards(forecast) {
+  const current = document.getElementById('weather-current');
+  const hours = document.getElementById('weather-hours');
+  const updated = document.getElementById('weather-updated');
+  const locationLabel = document.getElementById('weather-location');
+  if (!current || !hours || !updated || !locationLabel || !forecast?.current || !forecast?.hourly) return;
+
+  const now = new Date(forecast.current.time);
+  const temp = Math.round(forecast.current.temperature_2m);
+  const feelsLike = Math.round(forecast.current.apparent_temperature);
+  const wind = Math.round(forecast.current.wind_speed_10m);
+  const rain = forecast.current.precipitation || 0;
+  const humidity = forecast.current.relative_humidity_2m;
+  const code = forecast.current.weather_code;
+  const dateLabel = now.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' });
+
+  current.style.background = getWeatherAccent(code);
+  locationLabel.textContent = `Present location: ${weatherLocation.name}`;
+
+  current.innerHTML = `
+    <div class="flex items-center gap-3">
+      <div class="text-3xl">${weatherCodeToIcon(code)}</div>
+      <div>
+        <div class="flex items-baseline gap-2">
+          <span class="text-lg font-extrabold text-stone-800">${temp}°C</span>
+          <span class="text-[10px] text-stone-500 font-semibold">Feels like ${feelsLike}°C</span>
+        </div>
+        <div class="text-[11px] text-stone-500 font-semibold">${weatherCodeToText(code)} • ${humidity}% humidity</div>
+        <div class="text-[10px] text-stone-400 font-medium mt-0.5">Wind ${wind} km/h • Rain ${rain.toFixed(1)} mm</div>
+      </div>
+    </div>
+    <div class="mt-2 text-[10px] text-stone-400 font-medium">Updated ${dateLabel}</div>
+  `;
+
+  const hourCards = forecast.hourly.time.slice(0, 3).map((time, index) => {
+    const hourDate = new Date(time);
+    const hourCode = forecast.hourly.weather_code[index];
+    const hourTemp = Math.round(forecast.hourly.temperature_2m[index]);
+    const rainChance = forecast.hourly.precipitation_probability[index] || 0;
+    const label = hourDate.toLocaleTimeString('en-IN', { hour: 'numeric', timeZone: 'Asia/Kolkata' });
+    return `
+      <div class="weather-day text-center">
+        <div class="text-[10px] font-bold uppercase tracking-wide text-stone-500">${label}</div>
+        <div class="text-lg mt-1">${weatherCodeToIcon(hourCode)}</div>
+        <div class="text-[11px] font-semibold text-stone-700">${hourTemp}°C</div>
+        <div class="text-[9px] text-stone-400">Rain ${rainChance}%</div>
+      </div>
+    `;
+  }).join('');
+
+  hours.innerHTML = hourCards;
+  updated.textContent = 'Live sync';
+}
+
+function getCurrentDeviceLocation() {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) {
+      resolve({ latitude: FALLBACK_WEATHER.latitude, longitude: FALLBACK_WEATHER.longitude, name: FALLBACK_WEATHER.name, source: 'fallback' });
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
+
+        try {
+          const reverseResponse = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`, {
+            headers: { 'Accept-Language': 'en' }
+          });
+          const reverseData = await reverseResponse.json();
+          const city = reverseData?.address?.city || reverseData?.address?.town || reverseData?.address?.village || reverseData?.address?.state || 'Current location';
+          const state = reverseData?.address?.state || 'Current region';
+          resolve({
+            latitude,
+            longitude,
+            name: `${city}, ${state}`,
+            source: 'device'
+          });
+        } catch (error) {
+          resolve({
+            latitude,
+            longitude,
+            name: `Current location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`,
+            source: 'device'
+          });
+        }
+      },
+      () => {
+        resolve({ latitude: FALLBACK_WEATHER.latitude, longitude: FALLBACK_WEATHER.longitude, name: FALLBACK_WEATHER.name, source: 'fallback' });
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+    );
+  });
+}
+
+async function loadGujaratWeather() {
+  const current = document.getElementById('weather-current');
+  const hours = document.getElementById('weather-hours');
+  const locationLabel = document.getElementById('weather-location');
+  const updated = document.getElementById('weather-updated');
+  if (!current || !hours || !locationLabel || !updated) return;
+
+  try {
+    const deviceLocation = await getCurrentDeviceLocation();
+    weatherLocation = deviceLocation;
+
+    locationLabel.textContent = `Present location: ${deviceLocation.name}`;
+    const response = await fetch(buildWeatherEndpoint(deviceLocation.latitude, deviceLocation.longitude), { mode: 'cors' });
+    if (!response.ok) throw new Error('Weather request failed');
+
+    const data = await response.json();
+    renderWeatherCards(data);
+  } catch (error) {
+    current.innerHTML = '<div class="text-[11px] text-amber-700 font-semibold">Weather service is temporarily unavailable. The monsoon advisory remains active.</div>';
+    hours.innerHTML = '<div class="weather-day col-span-3"><div class="text-[10px] font-semibold text-stone-500">Please check the local forecast before departure.</div></div>';
+    updated.textContent = 'Unavailable';
+    locationLabel.textContent = `Present location: ${weatherLocation.name}`;
+  }
+}
+
+loadGujaratWeather();
+setInterval(loadGujaratWeather, 30 * 60 * 1000);
 
 /* ═══════════════════════════════════════════════════════════
    BUILD TIMELINE WITH AI DRIVE INFO
